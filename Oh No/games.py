@@ -28,6 +28,9 @@ dashCount = 0
 staminaCount = 0
 attackStamCount = 0
 attackCount = 0
+hurtCount = 0
+
+
 
 
 
@@ -60,6 +63,7 @@ class Player(object):
         self.playerAttackL = False
         self.playerAttackD = False
         self.playerAttackR = False
+        self.playerHurt = True
 
     def Left(self):
         self.playerX -= 7
@@ -90,16 +94,21 @@ class Player(object):
         self.playerCon = False
 
     def attackU(self):
-        SCREEN.blit(swipeU,(player.playerX-50,player.playerY - 80))
+        SCREEN.blit(swipeU,(WIDTH/2 - 16 -50,HEIGHT/2 - 16 - 80))
         self.playerCon = False
     def attackL(self):
-        SCREEN.blit(swipeL,(player.playerX-80,player.playerY - 50))
+        SCREEN.blit(swipeL,(WIDTH/2 - 16 -80,HEIGHT/2 - 16 - 50))
         self.playerCon = False
     def attackD(self):
-        SCREEN.blit(swipeD,(player.playerX-50,player.playerY-20))
+        SCREEN.blit(swipeD,(WIDTH/2 - 16 -50,HEIGHT/2 - 16-20))
         self.playerCon = False
     def attackR(self):
-        SCREEN.blit(swipeR,(player.playerX-20,player.playerY - 50))
+        SCREEN.blit(swipeR,(WIDTH/2 - 16 -20,HEIGHT/2 - 16 - 50))
+        self.playerCon = False
+
+    def hurt(self):
+        self.playerHealth -= 1
+        
         self.playerCon = False
         
 
@@ -226,6 +235,29 @@ while True:  #Main
             staminaCount = 0
 
 
+    if player.playerHurt == True:
+        hurtCount += 1
+        if hurtCount%2 != 0:
+            playerStill = pygame.image.load('Sprites/New Piskel Hurt.png')
+        else:
+            playerStill = pygame.image.load('Sprites/New Piskel.png')
+
+        if player.playerFace == 'U':
+            player.playerY += 10
+        if player.playerFace == 'R':
+            player.playerX -= 10
+        if player.playerFace == 'D':
+            player.playerY -= 10
+        if player.playerFace == 'L':
+            player.playerX += 10
+
+        if hurtCount >= 10:
+            player.playerHurt = False
+            hurtCount = 0
+            
+            
+        
+
 
 
     if player.playerAttackU == True:
@@ -310,10 +342,15 @@ while True:  #Main
 # =================================================================================
     # DRAWING SHIT
 # =================================================================================
-            
     playerX, playerY = player.getPlayerPos()
+
     
-    SCREEN.blit(playerStill,(playerX,playerY))
+
+    SCREEN.blit(playerStill,(WIDTH/2 - 16,HEIGHT/2 - 16))
+
+
+
+    pygame.draw.rect(SCREEN, (255,255,255), (50 - playerX, 50- playerY,10,10))
 
     for i in range (player.playerMaxStam):
         if i < player.playerStam:
