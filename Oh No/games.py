@@ -23,6 +23,8 @@ swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
 swipeR= pygame.image.load('Sprites/AttackR.png')
 
+spikeNum = 2
+
 
 stage = 0
 dashCount = 0
@@ -40,10 +42,13 @@ class spike (object):
     def __init__(self, x, y):
         self.spikeX = x
         self.spikeY = y
+        self.hitbox = pygame.Rect(self.spikeX-player.playerX, self.spikeY-player.playerY, 64,64)
 
     def draw(self):
         SCREEN.blit(spikeImg,(self.spikeX - player.playerX, self.spikeY - 8 - player.playerY))
 
+    def update(self,x,y):
+        self.hitbox.move_ip(x,y)
 
 
 class Player(object):
@@ -71,6 +76,9 @@ class Player(object):
         self.playerAttackD = False
         self.playerAttackR = False
         self.playerHurt = False
+        self.playerInvuln = False
+        self.playerHurtFace = 'D'
+        self.hitbox = pygame.Rect(WIDTH/2 - 16,HEIGHT/2 - 16,32,32)
 
     def Left(self):
         self.playerX -= 7
@@ -114,8 +122,9 @@ class Player(object):
         self.playerCon = False
 
     def hurt(self):
+        self.playerHurtFace = self.playerFace
         self.playerHealth -= 1
-        
+        self.playerHurt = True
         self.playerCon = False
         
 
@@ -125,7 +134,8 @@ class Player(object):
 player = Player()
     
     
-
+spike1 = spike(100,100)
+spike2 = spike(200,200)
 
 
 
@@ -163,6 +173,7 @@ while True:  #Main
 # =================================================================================
     #PLAYER INPUT
 # =================================================================================
+    oldPlayerX, oldPlayerY = player.getPlayerPos()
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -233,6 +244,11 @@ while True:  #Main
     # GAME LOGIC
 # =================================================================================
 
+    for i in range (spikeNum):
+        spikeStr = 'spike' + str(i+1)
+        if pygame.Rect.colliderect(player.hitbox, eval(spikeStr).hitbox) == True and player.playerInvuln == False:
+            player.hurt()
+
     #Stamina Regen
 
     if player.playerStam != player.playerMaxStam:
@@ -243,24 +259,31 @@ while True:  #Main
 
 
     if player.playerHurt == True:
+        player.playerInvuln = True
         hurtCount += 1
         if hurtCount%2 != 0:
             playerStill = pygame.image.load('Sprites/New Piskel Hurt.png')
         else:
             playerStill = pygame.image.load('Sprites/New Piskel.png')
 
-        if player.playerFace == 'U':
-            player.playerY += 10
-        if player.playerFace == 'R':
-            player.playerX -= 10
-        if player.playerFace == 'D':
-            player.playerY -= 10
-        if player.playerFace == 'L':
-            player.playerX += 10
+        if hurtCount < 10:
+            if player.playerHurtFace == 'U':
+                player.playerY += 10
+            if player.playerHurtFace == 'R':
+                player.playerX -= 10
+            if player.playerHurtFace == 'D':
+                player.playerY -= 10
+            if player.playerHurtFace == 'L':
+                player.playerX += 10
 
         if hurtCount >= 10:
+            player.playerCon = True
+
+        if hurtCount >= 20:
+            player.playerInvuln = False
             player.playerHurt = False
             hurtCount = 0
+
             
             
         
@@ -304,6 +327,7 @@ while True:  #Main
 
     if dashCount > 0:
         player.playerCon = False
+        player.playerInvuln = True
         dashCount += 1
         if dashCount > 6:
             player.playerStam -= 1
@@ -312,6 +336,7 @@ while True:  #Main
             player.playerDashUp = False
             player.playerDashDown = False
             player.playerCon = True
+            player.playerInvuln = False
             dashCount = 0
 
 
@@ -342,8 +367,13 @@ while True:  #Main
         if player.playerMoveDown == True:
             player.Down()
 
-            
-        
+    playerX, playerY = player.getPlayerPos()
+
+
+    for i in range (spikeNum):
+        spikeStr = 'spike' + str(i+1)
+
+        eval(spikeStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
 
 
 # =================================================================================
@@ -353,15 +383,16 @@ while True:  #Main
 
     
 
-    SCREEN.blit(playerStill,(WIDTH/2 - 16,HEIGHT/2 - 16))
+    
 
+    for i in range (spikeNum):
+        spikeStr = 'spike' + str(i+1)
+        eval(spikeStr).draw()
 
-
-    pygame.draw.rect(SCREEN, (255,255,255), (50 - playerX, 50- playerY,10,10))
-
-    spike1 = spike(100,100)
 
     spike1.draw()
+    SCREEN.blit(playerStill,(WIDTH/2 - 16,HEIGHT/2 - 16))
+
 
     for i in range (player.playerMaxStam):
         if i < player.playerStam:
