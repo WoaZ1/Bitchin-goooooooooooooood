@@ -13,6 +13,7 @@ pygame.display.set_caption('Pale King')
 
 
 playerStill = pygame.image.load('Sprites/New Piskel.png')
+spikeImg = pygame.image.load('Sprites/Spike.png')
 stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
 heart = pygame.image.load('Sprites/Heart.png')
@@ -35,7 +36,13 @@ hurtCount = 0
 
 
 
+class spike (object):
+    def __init__(self, x, y):
+        self.spikeX = x
+        self.spikeY = y
 
+    def draw(self):
+        SCREEN.blit(spikeImg,(self.spikeX - player.playerX, self.spikeY - 8 - player.playerY))
 
 
 
@@ -63,7 +70,7 @@ class Player(object):
         self.playerAttackL = False
         self.playerAttackD = False
         self.playerAttackR = False
-        self.playerHurt = True
+        self.playerHurt = False
 
     def Left(self):
         self.playerX -= 7
@@ -103,7 +110,7 @@ class Player(object):
         SCREEN.blit(swipeD,(WIDTH/2 - 16 -50,HEIGHT/2 - 16-20))
         self.playerCon = False
     def attackR(self):
-        SCREEN.blit(swipeR,(WIDTH/2 - 16 -20,HEIGHT/2 - 16 - 50))
+        SCREEN.blit(swipeR,(WIDTH/2 - 16 -10,HEIGHT/2 - 16 - 50))
         self.playerCon = False
 
     def hurt(self):
@@ -351,6 +358,10 @@ while True:  #Main
 
 
     pygame.draw.rect(SCREEN, (255,255,255), (50 - playerX, 50- playerY,10,10))
+
+    spike1 = spike(100,100)
+
+    spike1.draw()
 
     for i in range (player.playerMaxStam):
         if i < player.playerStam:
