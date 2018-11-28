@@ -36,7 +36,7 @@ hurtCount = 0
 
 
 
-
+#class ghost (object)
 
 class spike (object):
     def __init__(self, x, y):
@@ -326,6 +326,7 @@ while True:  #Main
     #DASH COUNTER
 
     if dashCount > 0:
+        playerStill = pygame.image.load('Sprites/New Piskel Dash.png')
         player.playerCon = False
         player.playerInvuln = True
         dashCount += 1
@@ -337,6 +338,7 @@ while True:  #Main
             player.playerDashDown = False
             player.playerCon = True
             player.playerInvuln = False
+            playerStill = pygame.image.load('Sprites/New Piskel.png')
             dashCount = 0
 
 
