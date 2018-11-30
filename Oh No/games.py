@@ -1,6 +1,26 @@
 import pygame, sys, os
 
 from pygame.locals import *
+
+def colorize(image, newColor):
+    image = image.copy()
+    image.fill((0, 0, 0, 255), None, pygame.BLEND_RGBA_MULT)
+    image.fill(newColor[0:3] + (0,), None, pygame.BLEND_RGBA_ADD)
+    return image
+
+
+def blit_alpha(target, source, location, opacity):
+        x = location[0]
+        y = location[1]
+        temp = pygame.Surface((source.get_width(), source.get_height())).convert()
+        temp.blit(target, (-x, -y))
+        temp.blit(source, (0, 0))
+        temp.set_alpha(opacity)        
+#        target.blit(temp, location)
+        return temp
+
+
+
 pygame.init()
 FPS = 30
 fpsClock = pygame.time.Clock()
@@ -29,6 +49,8 @@ swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
 swipeR= pygame.image.load('Sprites/AttackR.png')
+playerHurt = colorize(playerDown1, (255,255,255))
+
 
 playerStill = playerDown1
 
@@ -76,10 +98,10 @@ class Player(object):
         self.playerDashRight = False
         self.playerDashUp = False
         self.playerDashDown = False
-        self.playerMaxStam = 2
+        self.playerMaxStam = 3
         self.playerStam = self.playerMaxStam
         self.playerFace = 'D'
-        self.playerMaxHealth = 3
+        self.playerMaxHealth = 5
         self.playerHealth = 2
         self.playerAttackU = False
         self.playerAttackL = False
@@ -273,12 +295,14 @@ while True:  #Main
 
 
     if player.playerHurt == True:
+        if hurtCount == 0:
+            playerStillCopy = playerStill
         player.playerInvuln = True
         hurtCount += 1
         if hurtCount%2 != 0:
-            playerStill = pygame.image.load('Sprites/New Piskel Hurt.png')
+            playerStill = colorize(playerStill, (255,255,255))
         else:
-            playerStill = pygame.image.load('Sprites/playerDown.png')
+            playerStill = playerStillCopy
 
         if hurtCount < 10:
             if player.playerHurtFace == 'U':
@@ -340,7 +364,9 @@ while True:  #Main
     #DASH COUNTER
 
     if dashCount > 0:
-        playerStill = pygame.image.load('Sprites/New Piskel Dash.png')
+        if dashCount == 1:
+            playerStillCopy = playerStill
+        playerStill = blit_alpha(SCREEN, playerStill, (100,100), 220)
         player.playerCon = False
         player.playerInvuln = True
         dashCount += 1
@@ -352,7 +378,7 @@ while True:  #Main
             player.playerDashDown = False
             player.playerCon = True
             player.playerInvuln = False
-            playerStill = pygame.image.load('Sprites/playerDown.png')
+            playerStill = playerStillCopy
             dashCount = 0
 
 
@@ -375,12 +401,14 @@ while True:  #Main
 
     if player.playerCon == True:
         if player.playerMoveLeft == True:
+            player.playerFace = 'L'
             if mainCount > 10 :
                 playerStill = playerLeft1
             else:
                 playerStill = playerLeft2
                 player.Left()
         if player.playerMoveRight == True:
+            player.playerFace = 'R'
             
             if mainCount>10 :
                 playerStill = playerRight1
@@ -389,6 +417,7 @@ while True:  #Main
                 player.Right()
 
         if player.playerMoveUp == True:
+            player.playerFace = 'U'
             
             if mainCount > 10 :
                 playerStill = playerUp1
@@ -396,6 +425,7 @@ while True:  #Main
                 playerStill = playerUp2
                 player.Up()
         if player.playerMoveDown == True:
+            player.playerFace = 'D'
             if mainCount > 10 :
                 playerStill = playerDown1
             else:
