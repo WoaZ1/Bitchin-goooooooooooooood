@@ -12,7 +12,14 @@ pygame.display.set_caption('Pale King')
 
 
 
-playerStill = pygame.image.load('Sprites/New Piskel.png')
+playerDown1 = pygame.image.load('Sprites/playerDown.png')
+playerDown2 = pygame.image.load('Sprites/playerDown2.png')
+playerUp1 = pygame.image.load('Sprites/playerUp.png')
+playerUp2 = pygame.image.load('Sprites/playerUp2.png')
+playerLeft1 = pygame.image.load('Sprites/playerLeft.png')
+playerLeft2 = pygame.image.load('Sprites/playerLeft2.png')
+playerRight1 = pygame.image.load('Sprites/playerRight.png')
+playerRight2 = pygame.image.load('Sprites/playerRight2.png')
 spikeImg = pygame.image.load('Sprites/Spike.png')
 stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
@@ -22,6 +29,8 @@ swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
 swipeR= pygame.image.load('Sprites/AttackR.png')
+
+playerStill = playerDown1
 
 spikeNum = 2
 
@@ -33,6 +42,7 @@ attackStamCount = 0
 attackCount = 0
 hurtCount = 0
 
+mainCount = 0
 
 
 
@@ -244,6 +254,10 @@ while True:  #Main
     # GAME LOGIC
 # =================================================================================
 
+    mainCount += 1
+    if mainCount == 20:
+        mainCount = 0
+    
     for i in range (spikeNum):
         spikeStr = 'spike' + str(i+1)
         if pygame.Rect.colliderect(player.hitbox, eval(spikeStr).hitbox) == True and player.playerInvuln == False:
@@ -253,7 +267,7 @@ while True:  #Main
 
     if player.playerStam != player.playerMaxStam:
         staminaCount += 1
-        if staminaCount == 30:
+        if staminaCount == 20:
             player.playerStam += 1
             staminaCount = 0
 
@@ -264,7 +278,7 @@ while True:  #Main
         if hurtCount%2 != 0:
             playerStill = pygame.image.load('Sprites/New Piskel Hurt.png')
         else:
-            playerStill = pygame.image.load('Sprites/New Piskel.png')
+            playerStill = pygame.image.load('Sprites/playerDown.png')
 
         if hurtCount < 10:
             if player.playerHurtFace == 'U':
@@ -338,7 +352,7 @@ while True:  #Main
             player.playerDashDown = False
             player.playerCon = True
             player.playerInvuln = False
-            playerStill = pygame.image.load('Sprites/New Piskel.png')
+            playerStill = pygame.image.load('Sprites/playerDown.png')
             dashCount = 0
 
 
@@ -361,13 +375,32 @@ while True:  #Main
 
     if player.playerCon == True:
         if player.playerMoveLeft == True:
-            player.Left()
+            if mainCount > 10 :
+                playerStill = playerLeft1
+            else:
+                playerStill = playerLeft2
+                player.Left()
         if player.playerMoveRight == True:
-            player.Right()
+            
+            if mainCount>10 :
+                playerStill = playerRight1
+            else:
+                playerStill = playerRight2
+                player.Right()
+
         if player.playerMoveUp == True:
-            player.Up()
+            
+            if mainCount > 10 :
+                playerStill = playerUp1
+            else:
+                playerStill = playerUp2
+                player.Up()
         if player.playerMoveDown == True:
-            player.Down()
+            if mainCount > 10 :
+                playerStill = playerDown1
+            else:
+                playerStill = playerDown2
+                player.Down()
 
     playerX, playerY = player.getPlayerPos()
 
@@ -383,7 +416,7 @@ while True:  #Main
 # =================================================================================
     playerX, playerY = player.getPlayerPos()
 
-    
+
 
     
 
