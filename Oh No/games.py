@@ -34,12 +34,16 @@ pygame.display.set_caption('Pale King')
 
 playerDown1 = pygame.image.load('Sprites/playerDown.png')
 playerDown2 = pygame.image.load('Sprites/playerDown2.png')
+playerDownA = pygame.image.load('Sprites/playerADown.png')
 playerUp1 = pygame.image.load('Sprites/playerUp.png')
 playerUp2 = pygame.image.load('Sprites/playerUp2.png')
+playerUpA = pygame.image.load('Sprites/playerAUp.png')
 playerLeft1 = pygame.image.load('Sprites/playerLeft.png')
 playerLeft2 = pygame.image.load('Sprites/playerLeft2.png')
+playerLeftA = pygame.image.load('Sprites/playerALeft.png')
 playerRight1 = pygame.image.load('Sprites/playerRight.png')
 playerRight2 = pygame.image.load('Sprites/playerRight2.png')
+playerRightA = pygame.image.load('Sprites/playerARight.png')
 spikeImg = pygame.image.load('Sprites/Spike.png')
 stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
@@ -329,6 +333,11 @@ while True:  #Main
 
 
     if player.playerAttackU == True:
+        if attackCount ==0:
+            playerStillCopy = playerStill
+            playerStill = playerUpA
+        if attackCount == 3:
+            playerStill = playerStillCopy
         player.attackU()
         attackCount += 1
         if attackCount == 7:
@@ -337,6 +346,11 @@ while True:  #Main
             player.playerAttackU = False
             
     if player.playerAttackL == True:
+        if attackCount ==0:
+            playerStillCopy = playerStill
+            playerStill = playerLeftA
+        if attackCount == 3:
+            playerStill = playerStillCopy
         player.attackL()
         attackCount += 1
         if attackCount == 7:
@@ -345,14 +359,25 @@ while True:  #Main
             player.playerAttackL = False
             
     if player.playerAttackD == True:
+        if attackCount ==0:
+            playerStillCopy = playerStill
+            playerStill = playerDownA
+        if attackCount == 3:
+            playerStill = playerStillCopy
         player.attackD()
         attackCount += 1
         if attackCount == 7:
             player.playerCon = True
             attackCount = 0
             player.playerAttackD = False
+
             
     if player.playerAttackR == True:
+        if attackCount ==0:
+            playerStillCopy = playerStill
+            playerStill = playerRightA
+        if attackCount == 3:
+            playerStill = playerStillCopy
         player.attackR()
         attackCount += 1
         if attackCount == 7:
