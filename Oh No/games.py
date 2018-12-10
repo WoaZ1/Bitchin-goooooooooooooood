@@ -87,9 +87,10 @@ class ghost (object):
         self.xVelo = 0
         self.yVelo = 0
         self.maxHealth = 2
-        self.health = 2
+        self.health = 1
         self.hurt = True
         self.con = False
+        self.dead = False
 
     def draw(self):
         SCREEN.blit(ghostImg,(self.ghostX - player.playerX, self.ghostY - player.playerY))
@@ -113,12 +114,15 @@ class ghost (object):
         if pygame.Rect.colliderect(player.hitbox, self.actBox) == True:
             self.act = True
 
-    def hurt(self):
+    def hurtf(self):
 
         self.health -= 1
         self.hurt = True
         self.con = False
-        
+
+
+    def kill(self):
+        self.dead = True
 
 
 
@@ -172,6 +176,11 @@ class Player(object):
         self.playerInvuln = False
         self.playerHurtFace = 'D'
         self.hitbox = pygame.Rect(WIDTH/2 - 16,HEIGHT/2 - 16,32,32)
+        self.attackBoxU = pygame.Rect(-50040,-49960, 100, 20)
+        self.attackBoxD = pygame.Rect(-50000,-50000, 100, 20)
+        self.attackBoxL = pygame.Rect(-50000,-50000, 20, 100)
+        self.attackBoxR = pygame.Rect(-49975,-50040, 20, 80)
+        
 
     def Left(self):
         self.playerX -= 7
@@ -203,9 +212,11 @@ class Player(object):
 
     def attackU(self):
         SCREEN.blit(swipeU,(WIDTH/2 - 16 -50,HEIGHT/2 - 16 - 80))
+        self.attackBoxU.move_ip(WIDTH/2 - 16 -50,HEIGHT/2 - 16 - 80)
         self.playerCon = False
     def attackL(self):
         SCREEN.blit(swipeL,(WIDTH/2 - 16 -80,HEIGHT/2 - 16 - 50))
+        self.attackBoxL.move_ip(WIDTH/2 - 16 -80,HEIGHT/2 - 16 - 50)
         self.playerCon = False
     def attackD(self):
         SCREEN.blit(swipeD,(WIDTH/2 - 16 -50,HEIGHT/2 - 16-20))
@@ -399,6 +410,7 @@ while True:  #Main
         player.attackU()
         attackCount += 1
         if attackCount == 7:
+            player.attackBoxU.move_ip(-50000,-50000)
             player.playerCon = True
             attackCount = 0
             player.playerAttackU = False
@@ -413,6 +425,7 @@ while True:  #Main
         player.attackL()
         attackCount += 1
         if attackCount == 7:
+            player.attackBoxL.move_ip(-50000,-50000)
             player.playerCon = True
             attackCount = 0
             player.playerAttackL = False
@@ -420,6 +433,8 @@ while True:  #Main
             
     if player.playerAttackD == True:
         if attackCount ==0:
+            swordMovement = (-(WIDTH/2 -10+50000),-(HEIGHT/2 +50 +50000))
+            player.attackBoxD.move_ip(WIDTH/2 -10+50000,HEIGHT/2 +50 +50000)
             playerStillCopy = playerStill
             playerStill = playerDownA
         if attackCount == 3:
@@ -427,6 +442,7 @@ while True:  #Main
         player.attackD()
         attackCount += 1
         if attackCount == 7:
+            player.attackBoxD.move_ip(swordMovement)
             player.playerCon = True
             attackCount = 0
             player.playerAttackD = False
@@ -435,6 +451,8 @@ while True:  #Main
             
     if player.playerAttackR == True:
         if attackCount ==0:
+            swordMovement = (-(WIDTH/2 + 16+50000),-(HEIGHT/2+50000))
+            player.attackBoxR.move_ip(WIDTH/2 + 16+50000,HEIGHT/2+50000)
             playerStillCopy = playerStill
             playerStill = playerRightA
         if attackCount == 3:
@@ -442,6 +460,7 @@ while True:  #Main
         player.attackR()
         attackCount += 1
         if attackCount == 7:
+            player.attackBoxR.move_ip(swordMovement)
             player.playerCon = True
             attackCount = 0
             player.playerAttackR = False
@@ -535,14 +554,32 @@ while True:  #Main
     for i in range (ghostNum):
         ghostStr = 'ghost' + str(i+1)
 
-        eval(ghostStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
-        if pygame.Rect.colliderect(player.hitbox, eval(ghostStr).hitbox) == True and player.playerInvuln == False:
-            player.hurt()
-        try:
-            if pygame.Rect.colliderect(attackBox, eval(ghostStr).hitbox) == True:
-                eval(ghostStr).hurt()
-        except:
-            pass
+        if eval(ghostStr).dead == False:
+
+            eval(ghostStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
+            
+            if pygame.Rect.colliderect(player.hitbox, eval(ghostStr).hitbox) == True and player.playerInvuln == False:
+                player.hurt()
+                
+            pygame.draw.rect(SCREEN,(255,255,255),player.attackBoxR)
+            pygame.draw.rect(SCREEN,(255,255,255),player.attackBoxD)
+            pygame.draw.rect(SCREEN,(255,255,255),player.attackBoxL)
+            pygame.draw.rect(SCREEN,(255,255,255),player.attackBoxU)
+
+
+            if pygame.Rect.colliderect(player.attackBoxU, eval(ghostStr).hitbox) == True:
+                eval(ghostStr).hurtf()
+            if pygame.Rect.colliderect(player.attackBoxD, eval(ghostStr).hitbox) == True:
+                eval(ghostStr).hurtf()
+            if pygame.Rect.colliderect(player.attackBoxL, eval(ghostStr).hitbox) == True:
+                eval(ghostStr).hurtf()
+            if pygame.Rect.colliderect(player.attackBoxR, eval(ghostStr).hitbox) == True:
+                eval(ghostStr).hurtf()
+
+
+            if eval(ghostStr).health <= 0:
+                eval(ghostStr).kill()
+
 
     for i in range (spikeNum):
         spikeStr = 'spike' + str(i+1)
@@ -568,7 +605,8 @@ while True:  #Main
         
     for i in range (ghostNum):
         ghostStr = 'ghost' + str(i+1)
-        eval(ghostStr).draw()
+        if eval(ghostStr).dead == False:
+            eval(ghostStr).draw()
 
 
     SCREEN.blit(playerStill,(WIDTH/2 - 16,HEIGHT/2 - 16))
