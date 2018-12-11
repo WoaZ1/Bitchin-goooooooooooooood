@@ -1,4 +1,4 @@
-import pygame, sys, os
+import pygame, sys, os, math
 
 from pygame.locals import *
 from fractions import Fraction
@@ -101,7 +101,7 @@ walkCount = 0
 # First Enemy Created, is a simple enemy that moves towards the player.
 # Will move faster if farther away
 class ghost (object):
-    def __init__(self,x,y,act = False,hp = 2):
+    def __init__(self,x,y,act = False,hp = 10):
         self.ghostX = x
         self.ghostY = y
 
@@ -134,6 +134,11 @@ class ghost (object):
         #Is the enemy dead?
         self.dead = False
 
+
+        self.hurtVeloX = 0
+        self.hurtVeloY = 0
+
+        
         self.hurtCount = 0
 
 
@@ -147,14 +152,37 @@ class ghost (object):
         if self.con == True:
             self.xVelo = (((player.playerX-self.ghostX) + WIDTH/2) / 20)
             self.yVelo = (((player.playerY-self.ghostY) + HEIGHT/2) / 20)
-            self.ghostX += self.xVelo
-            self.ghostY += self.yVelo
+
 
         if self.hurt == True:
-            tempFrac = Fraction(eval(ghostStr).ghostX - WIDTH/2, eval(ghostStr).ghostY - HEIGHT/2)
-            self.ghostX += tempFrac.numerator  
-            self.ghostY += tempFrac.denominator 
-        
+            if self.hurtCount == 1:
+                
+                    
+                self.hurtVeloX, self.hurtVeloY = player.playerX+WIDTH/2 - eval(ghostStr).ghostX, player.playerY+HEIGHT/2 - eval(ghostStr).ghostY
+
+                if self.hurtVeloY == 0:
+                    self.hurtVeloY = 1
+                if self.hurtVeloX == 0:
+                    self.hurtVeloX = 1
+                if abs(self.hurtVeloX) > abs(self.hurtVeloY):
+                    self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloY)*10
+                    self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloY)*10
+                elif abs(self.hurtVeloY) > abs(self.hurtVeloX):
+                    self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloX)*10
+                    self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloX)*10
+#                if eval(ghostStr).ghostX < 0:
+#                    self.hurtVeloX = self.hurtVeloX*-1
+#                if eval(ghostStr).ghostY < 0:
+#                    self.hurtVeloY = self.hurtVeloY*-1
+            self.xVelo = -1*self.hurtVeloX 
+            self.yVelo = -1*self.hurtVeloY
+            if self.hurtCount > 5:
+                self.hurt = False
+                self.hurtCount = 0
+                self.con = True
+
+        self.ghostX += self.xVelo
+        self.ghostY += self.yVelo
 
 
     #Moves the hitbox and the activation box
@@ -189,7 +217,6 @@ class ghost (object):
 #A spike tile, damages player
 class spike (object):
     def __init__(self, x, y):
-        print tileRound(x)
         self.spikeX = tileRound(x)
         self.spikeY = tileRound(y)
         self.hitbox = pygame.Rect(self.spikeX-player.playerX, self.spikeY-player.playerY, 64,64)
