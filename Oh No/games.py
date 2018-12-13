@@ -49,7 +49,8 @@ pygame.display.set_caption('Pale King')
 
 
 # LOADING SPRITES
-ghostImg = pygame.image.load('Sprites/playerDown.png')
+ghostL = pygame.image.load('Sprites/ghostL.png')
+ghostR = pygame.image.load('Sprites/ghostR.png')
 playerDown1 = pygame.image.load('Sprites/playerDown.png')
 playerDown2 = pygame.image.load('Sprites/playerDown2.png')
 playerDownA = pygame.image.load('Sprites/playerADown.png')
@@ -65,7 +66,14 @@ playerRightA = pygame.image.load('Sprites/playerARight.png')
 spikeImg = pygame.image.load('Sprites/Spike.png')
 stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
+exStam = pygame.image.load('Sprites/ExStam.png')
 heart = pygame.image.load('Sprites/Heart.png')
+heartTemp = pygame.image.load('Sprites/HeartTemp.png')
+brokeHeart1 = pygame.image.load('Sprites/BrokeHeart1.png')
+brokeHeart2 = pygame.image.load('Sprites/BrokeHeart2.png')
+brokeHeart3 = pygame.image.load('Sprites/BrokeHeart3.png')
+brokeHeart4 = pygame.image.load('Sprites/BrokeHeart4.png')
+brokeHeart5 = pygame.image.load('Sprites/BrokeHeart5.png')
 noHeart = pygame.image.load('Sprites/NoHeart.png')
 swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
@@ -92,6 +100,7 @@ staminaCount = 0
 attackStamCount = 0
 attackCount = 0
 hurtCount = 0
+hitCount = 0
 
 
 # Used as an easy way to time the player's walk animation and movement
@@ -141,10 +150,13 @@ class ghost (object):
         
         self.hurtCount = 0
 
+        self.ghostImg = ghostL
+
+
 
     #Draws enemy
     def draw(self):
-        SCREEN.blit(ghostImg,(self.ghostX - player.playerX, self.ghostY - player.playerY))
+        SCREEN.blit(self.ghostImg,(self.ghostX - player.playerX, self.ghostY - player.playerY))
 
 
     #Moves enemy, uses velocities to make it easier to move the hitbox
@@ -174,6 +186,14 @@ class ghost (object):
 #                    self.hurtVeloX = self.hurtVeloX*-1
 #                if eval(ghostStr).ghostY < 0:
 #                    self.hurtVeloY = self.hurtVeloY*-1
+            if self.hurtVeloX > 20:
+                self.hurtVeloX = 20
+            if self.hurtVeloX < -20:
+                self.hurtVeloX = -20
+            if self.hurtVeloY > 20:
+                self.hurtVeloY = 20
+            if self.hurtVeloY < -20:
+                self.hurtVeloY = -20
             self.xVelo = -1*self.hurtVeloX 
             self.yVelo = -1*self.hurtVeloY
             if self.hurtCount > 5:
@@ -187,6 +207,11 @@ class ghost (object):
 
     #Moves the hitbox and the activation box
     def update(self,x,y):
+
+        if player.playerX +WIDTH/2 > self.ghostX:
+            self.ghostImg = ghostR
+        else:
+            self.ghostImg = ghostL
 
         self.hitbox.move_ip(x+self.xVelo,y+self.yVelo)
         self.actBox.move_ip(x+self.xVelo,y+self.yVelo)
@@ -271,6 +296,8 @@ class Player(object):
         #player health counts
         self.playerMaxHealth = 5
         self.playerHealth = 5
+        self.playerTempHealth = 0
+        self.playerBrokeHealth = 0
 
         #Which way is the player attacking?
         self.playerAttackU = False
@@ -295,20 +322,27 @@ class Player(object):
         self.attackBoxD = pygame.Rect(-50035,-50020, 80, 20)
         self.attackBoxL = pygame.Rect(-50055,-50045, 20, 80)
         self.attackBoxR = pygame.Rect(-49975,-50040, 20, 80)
+
+        self.speed = 7
+
+
+        self.brokeBoys = False
+        self.brokeCount = 0
+        self.brokePiece = 1
         
 
     #Player Walking
     def Left(self):
-        self.playerX -= 7
+        self.playerX -= player.speed
         
     def Right(self):
-        self.playerX += 7
+        self.playerX += player.speed
         
     def Up(self):
-        self.playerY -= 7
+        self.playerY -= player.speed
     
     def Down(self):
-        self.playerY += 7
+        self.playerY += player.speed
 
 
     #Player Dashing
@@ -348,10 +382,18 @@ class Player(object):
         self.playerHealth -= 1
         self.playerHurt = True
         self.playerCon = False
+        self.brokeBoys = True
+        self.brokePiece = 1
         
     #Returns player Pos
     def getPlayerPos(self):
         return self.playerX, self.playerY
+
+    def hit(self):
+        self.playerStam += 1
+        if self.brokeBoys == True:
+            self.brokePiece += 1
+        
 
 
 #Things for testing
@@ -481,6 +523,7 @@ while True:  #Main
     #A main counter for the player's walking animation and movement
     walkCount += 1
     if walkCount == 25:
+        player.speed = 7
         walkCount = 0
 
         
@@ -492,12 +535,16 @@ while True:  #Main
 
     #Stamina Regen
 
-    if player.playerStam != player.playerMaxStam:
+    if player.playerStam < player.playerMaxStam:
         staminaCount += 1
-        if staminaCount == 20:
+        if staminaCount == 60:
             player.playerStam += 1
-            staminaCount = 0
-
+            staminaCount = 40
+    if player.playerStam > player.playerMaxStam:
+        staminaCount += 1
+        if staminaCount == 60:
+            player.playerStam -= 1
+            staminaCount = 40
 
 
     #If the player gets hurt
@@ -728,6 +775,12 @@ while True:  #Main
                 player.Down()
 
 
+    if player.brokeBoys == True:
+        if player.brokePiece == 6:
+            player.playerHealth += 1
+            player.brokePiece = 1
+    if player.playerHealth == player.playerMaxHealth:
+        player.brokeBoys = False
     #Gets newer player X and Y after the movement is finished
 
     playerX, playerY = player.getPlayerPos()
@@ -765,12 +818,24 @@ while True:  #Main
             if eval(ghostStr).invul == False:
                 if pygame.Rect.colliderect(player.attackBoxU, eval(ghostStr).hitbox) == True:
                     eval(ghostStr).hurtf()
+                    player.hit()
+                    if player.playerStam > player.playerMaxStam:
+                        staminaCount = 0
                 if pygame.Rect.colliderect(player.attackBoxD, eval(ghostStr).hitbox) == True:
                     eval(ghostStr).hurtf()
+                    player.hit()
+                    if player.playerStam > player.playerMaxStam:
+                        staminaCount = 0
                 if pygame.Rect.colliderect(player.attackBoxL, eval(ghostStr).hitbox) == True:
                     eval(ghostStr).hurtf()
+                    player.hit()
+                    if player.playerStam > player.playerMaxStam:
+                        staminaCount = 0
                 if pygame.Rect.colliderect(player.attackBoxR, eval(ghostStr).hitbox) == True:
                     eval(ghostStr).hurtf()
+                    player.hit()
+                    if player.playerStam > player.playerMaxStam:
+                        staminaCount = 0
 
             #Kills the ghost if health is 0
             if eval(ghostStr).health <= 0:
@@ -819,19 +884,37 @@ while True:  #Main
 
 
     #Drawing the player's stamina bar
-    for i in range (player.playerMaxStam):
-        if i < player.playerStam:
-            SCREEN.blit(stamina,((WIDTH - 35*(i))-150,10))
-        if i >= player.playerStam:
-            SCREEN.blit(noStamina,((WIDTH - 35*(i))-150,10))
+    if player.playerStam < player.playerMaxStam:
+        for i in range (player.playerMaxStam):
+            if i < player.playerStam:
+                SCREEN.blit(stamina,((WIDTH - 35*(i))-150,10))
+            if i >= player.playerStam:
+                SCREEN.blit(noStamina,((WIDTH - 35*(i))-150,10))
+    else:
+        for i in range (player.playerStam):
+            if i < player.playerMaxStam:
+                SCREEN.blit(stamina,((WIDTH - 35*(i))-150,10))
+            if i >= player.playerMaxStam:
+                SCREEN.blit(exStam,((WIDTH - 35*(i))-150,10))
 
 
     #Drawing the player's health bar
     for i in range (player.playerMaxHealth):
         if i < player.playerHealth:
             SCREEN.blit(heart,( 5 + 80*(i), 10))
-        if i >= player.playerHealth:
-            SCREEN.blit(noHeart,( 5 + 80*(i), 10))
+        elif player.brokeBoys == True and i== player.playerHealth:
+            if player.brokePiece == 1:
+                SCREEN.blit(brokeHeart1,( 5 + 80*(i), 10))
+            if player.brokePiece == 2:
+                SCREEN.blit(brokeHeart2,( 5 + 80*(i), 10))
+            if player.brokePiece == 3:
+                SCREEN.blit(brokeHeart3,( 5 + 80*(i), 10))
+            if player.brokePiece == 4:
+                SCREEN.blit(brokeHeart4,( 5 + 80*(i), 10))
+            if player.brokePiece == 5:
+                SCREEN.blit(brokeHeart5,( 5 + 80*(i), 10))
+        else:
+            SCREEN.blit(brokeHeart1,( 5 + 80*(i), 10))
 
 
     #Updating the screen
