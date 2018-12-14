@@ -68,13 +68,17 @@ stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
 exStam = pygame.image.load('Sprites/ExStam.png')
 heart = pygame.image.load('Sprites/Heart.png')
-heartTemp = pygame.image.load('Sprites/HeartTemp.png')
 brokeHeart1 = pygame.image.load('Sprites/BrokeHeart1.png')
 brokeHeart2 = pygame.image.load('Sprites/BrokeHeart2.png')
 brokeHeart3 = pygame.image.load('Sprites/BrokeHeart3.png')
 brokeHeart4 = pygame.image.load('Sprites/BrokeHeart4.png')
 brokeHeart5 = pygame.image.load('Sprites/BrokeHeart5.png')
-noHeart = pygame.image.load('Sprites/NoHeart.png')
+brokeHeart6 = pygame.image.load('Sprites/BrokeHeart6.png')
+brokeHeart7 = pygame.image.load('Sprites/BrokeHeart7.png')
+brokeHeart8 = pygame.image.load('Sprites/BrokeHeart8.png')
+brokeHeart9 = pygame.image.load('Sprites/BrokeHeart9.png')
+brokeHeart10 = pygame.image.load('Sprites/BrokeHeart10.png')
+brokeHeartDie = pygame.image.load('Sprites/BrokeHeartDie.png')
 swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
@@ -86,12 +90,16 @@ playerStill = playerDown1
 
 
 # Num of objects
-spikeNum = 2
-ghostNum = 1
+tileNum = 0
+
+
+
+enemyNum = 0
+
+
 
 # Stage number
 stage = 0
-
 
 
 # Counters for timing abilities (this is used for animations and movement)
@@ -107,38 +115,33 @@ hitCount = 0
 walkCount = 0
 
 
-# First Enemy Created, is a simple enemy that moves towards the player.
-# Will move faster if farther away
-class ghost (object):
-    def __init__(self,x,y,act = False,hp = 10):
-        self.ghostX = x
-        self.ghostY = y
+#Used to keep track of all the enemies
+class enemy (object):
+    def __init__(self,x,y,act,hp):
+        
+        global enemyNum
+        enemyNum += 1
+        
+        self.X = x
+        self.Y = y
 
-        #Is the enemy active? Default: False
-        self.act = act
-
-        #Hitbox of the enemy
-        self.hitbox = pygame.Rect(self.ghostX-player.playerX, self.ghostY-player.playerY, 32,32)
-
-        #If the player moves within this area, the enemy activates
-        self.actBox = pygame.Rect(self.ghostX-player.playerX - 400, self.ghostY-player.playerY - 400,800,800)
-
-        # X and Y velocities
-        self.xVelo = 0
-        self.yVelo = 0
 
         #Health
         self.maxHealth = hp
         self.health = hp
 
+
         #Is the enemy in the hurt animation
         self.hurt = False
+
 
         #Is the enemy invulnerable?
         self.invul = False
         
+
         #Can the enemy move or attack?
-        self.con = False
+        self.con = act
+
 
         #Is the enemy dead?
         self.dead = False
@@ -150,27 +153,66 @@ class ghost (object):
         
         self.hurtCount = 0
 
-        self.ghostImg = ghostL
+        # X and Y velocities
+        self.xVelo = 0
+        self.yVelo = 0
 
 
 
     #Draws enemy
     def draw(self):
-        SCREEN.blit(self.ghostImg,(self.ghostX - player.playerX, self.ghostY - player.playerY))
+        SCREEN.blit(self.Img,(self.X - player.playerX, self.Y - player.playerY))
 
 
-    #Moves enemy, uses velocities to make it easier to move the hitbox
-    def move(self):
-        if self.con == True:
-            self.xVelo = (((player.playerX-self.ghostX) + WIDTH/2) / 20)
-            self.yVelo = (((player.playerY-self.ghostY) + HEIGHT/2) / 20)
+
+        #Moves the hitbox and the activation box
+    def update(self,x,y):
+
+        if player.playerX +WIDTH/2 > self.X:
+            self.Img = self.R
+        else:
+            self.Img = self.L
+
+#        print self.X - player.playerX-x+self.X
+#        print self.X
+
+        self.hitbox.move_ip(x+self.X -self.oldX,y+self.Y - self.oldY)
+        self.actBox.move_ip(x+self.X - self.oldX,y+self.Y - self.oldY) 
 
 
-        if self.hurt == True:
+        self.hitbox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
+        self.actBox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
+
+        pygame.draw.rect(SCREEN,(255,255,255),self.hitbox)
+        self.xVelo = 0
+        self.yVelo = 0
+
+
+        #Checks to see if the player is in the range to activate the enemy    
+    def active(self):
+
+        pygame.draw.rect(SCREEN,(255,255,255),self.actBox)
+        if pygame.Rect.colliderect(player.hitbox, self.actBox) == True and self.act == False:
+            self.act = True
+            self.con = True
+
+        #If the enemy dies
+    def kill(self):
+        self.dead = True
+
+    #Damages enemy
+    def hurtf(self):
+        if self.canHurt == True:
+            self.health -= 1
+            self.hurt = True
+            self.con = False
+
+    def hurtMove(self):
+        if self.hurt == True and self.knockBack == True:
             if self.hurtCount == 1:
                 
                     
-                self.hurtVeloX, self.hurtVeloY = player.playerX+WIDTH/2 - eval(ghostStr).ghostX, player.playerY+HEIGHT/2 - eval(ghostStr).ghostY
+                self.hurtVeloX, self.hurtVeloY = player.playerX+WIDTH/2 - eval(enemyStr).X, player.playerY+HEIGHT/2 - eval(enemyStr).Y
 
                 if self.hurtVeloY == 0:
                     self.hurtVeloY = 1
@@ -182,9 +224,9 @@ class ghost (object):
                 elif abs(self.hurtVeloY) > abs(self.hurtVeloX):
                     self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloX)*10
                     self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloX)*10
-#                if eval(ghostStr).ghostX < 0:
+#                if eval(enemyStr).X < 0:
 #                    self.hurtVeloX = self.hurtVeloX*-1
-#                if eval(ghostStr).ghostY < 0:
+#                if eval(enemyStr).Y < 0:
 #                    self.hurtVeloY = self.hurtVeloY*-1
             if self.hurtVeloX > 20:
                 self.hurtVeloX = 20
@@ -201,58 +243,163 @@ class ghost (object):
                 self.hurtCount = 0
                 self.con = True
 
-        self.ghostX += self.xVelo
-        self.ghostY += self.yVelo
+            
+# First Enemy Created, is a simple enemy that moves towards the player.
+# Will move faster if farther away            
+class ghost (enemy):
+    def __init__(self,x,y,act = False,hp = 2):
 
 
-    #Moves the hitbox and the activation box
-    def update(self,x,y):
+        enemy.__init__(self,x,y,act,hp)
+        #Is the enemy active? Default: False
+        self.act = act
+        self.knockBack = True
 
-        if player.playerX +WIDTH/2 > self.ghostX:
-            self.ghostImg = ghostR
-        else:
-            self.ghostImg = ghostL
+        #Hitbox of the enemy
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
 
-        self.hitbox.move_ip(x+self.xVelo,y+self.yVelo)
-        self.actBox.move_ip(x+self.xVelo,y+self.yVelo)
-        self.xVelo = 0
-        self.yVelo = 0
+        #If the player moves within this area, the enemy activates
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
 
 
-    #Checks to see if the player is in the range to activate the enemy    
-    def active(self):
-        if pygame.Rect.colliderect(player.hitbox, self.actBox) == True and self.act == False:
-            self.act = True
-            self.con = True
+        self.L = ghostL
+        self.R = ghostR
 
-    #Damages enemy
-    def hurtf(self):
+        self.canHurt = True
 
-        self.health -= 1
-        self.hurt = True
-        self.con = False
 
-    #If the enemy dies
-    def kill(self):
-        self.dead = True
 
+        self.Img = ghostL
+
+
+
+
+
+
+        #Moves enemy, uses velocities to make it easier to move the hitbox
+    def move(self):
+        if self.con == True:
+            self.xVelo = (((player.playerX-self.X) + WIDTH/2) / 20)
+            self.yVelo = (((player.playerY-self.Y) + HEIGHT/2) / 20)
+            
+        self.hurtMove()
 
 
         
-#A spike tile, damages player
-class spike (object):
-    def __init__(self, x, y):
-        self.spikeX = tileRound(x)
-        self.spikeY = tileRound(y)
-        self.hitbox = pygame.Rect(self.spikeX-player.playerX, self.spikeY-player.playerY, 64,64)
 
+
+
+        self.X += self.xVelo
+        self.Y += self.yVelo
+
+
+
+class charger (enemy):
+    def __init__(self,x,y,act = False,hp = 5):
+
+
+        enemy.__init__(self,x,y,act,hp)
+        #Is the enemy active? Default: False
+        self.act = act
+        self.knockBack = True
+
+        #Hitbox of the enemy
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+
+        #If the player moves within this area, the enemy activates
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
+
+
+        self.L = ghostL
+        self.R = ghostR
+
+        self.canHurt = True
+
+        self.dashCount = 0
+
+        self.speed = 5
+
+        self.Img = ghostL
+
+        self.exhaustCount = 100
+
+        self.chargeAngle = 0
+        self.oldX = self.X
+        self.oldY = self.Y
+
+
+    def move(self):
+
+
+        
+        self.oldX = self.X
+        self.oldY = self.Y
+        
+        if self.con == True and abs(player.playerX)-abs(self.X)+abs(player.playerY)-abs(self.Y)>= 500 or self.con == True and self.exhaustCount <= 100:
+            self.exhaustCount += 1
+
+            dx = player.playerX + WIDTH/2 -16- self.X
+            dy = player.playerY + HEIGHT/2 -16- self.Y
+           
+            angle = math.atan2(dy, dx)
+
+
+            
+            self.xVelo = (self.speed*math.cos(angle))
+            self.yVelo = (self.speed*math.sin(angle))
+        else:
+            self.con = False
+            self.dashCount += 1
+            if self.dashCount == 20:
+
+                dx = player.playerX + WIDTH/2-16 - self.X
+                dy = player.playerY + HEIGHT/2-16 - self.Y
+           
+                self.chargeAngle = math.atan2(dy, dx)
+            if self.dashCount > 20 and self.dashCount < 40:
+                self.xVelo = ((self.speed*6)*math.cos(self.chargeAngle))
+                self.yVelo = ((self.speed*6)*math.sin(self.chargeAngle))
+            if self.dashCount > 40:
+                self.dashCount = 0
+                self.con = True
+                self.exhaustCount = 0
+                
+
+        self.hurtMove()
+
+
+        self.X += self.xVelo
+        self.Y += self.yVelo    
+
+class tile (object):
+    def __init__(self,x,y):
+        
+        global tileNum
+        tileNum += 1
+        
+        self.X = tileRound(x)
+        self.Y = tileRound(y)
+        self.hurts = False
 
     def draw(self):
-        SCREEN.blit(spikeImg,(self.spikeX - player.playerX, self.spikeY - 8 - player.playerY))
+        SCREEN.blit(self.img,(self.X - player.playerX, self.Y - 8 - player.playerY))
 
     def update(self,x,y):
 
         self.hitbox.move_ip(x,y)
+        
+#A spike tile, damages player
+class spike (tile):
+    def __init__(self, x, y):
+        tile.__init__(self,x,y)
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 64,64)
+        self.img = spikeImg
+        self.hurts = True
+
+
+
+
+
 
 
 
@@ -329,6 +476,9 @@ class Player(object):
         self.brokeBoys = False
         self.brokeCount = 0
         self.brokePiece = 1
+
+        self.brokeDie = False
+        self.brokeDieCount = 0
         
 
     #Player Walking
@@ -380,6 +530,7 @@ class Player(object):
     def hurt(self):
         self.playerHurtFace = self.playerFace
         self.playerHealth -= 1
+        self.playerInvuln = True
         self.playerHurt = True
         self.playerCon = False
         self.brokeBoys = True
@@ -400,11 +551,11 @@ class Player(object):
 player = Player()
     
     
-spike1 = spike(100,100)
-spike2 = spike(150,100)
+tile1 = spike(100,100)
+tile2 = spike(150,100)
 
 
-ghost1 = ghost(1500,200)
+enemy1 = charger(1500,200)
 
 
 
@@ -528,10 +679,11 @@ while True:  #Main
 
         
     #Seeing if the player get hurt for every spike
-    for i in range (spikeNum):
-        spikeStr = 'spike' + str(i+1)
-        if pygame.Rect.colliderect(player.hitbox, eval(spikeStr).hitbox) == True and player.playerInvuln == False:
-            player.hurt()
+    for i in range (tileNum):
+        tileStr = 'tile' + str(i+1)
+        if eval(tileStr).hurts == True:
+            if pygame.Rect.colliderect(player.hitbox, eval(tileStr).hitbox) == True and player.playerInvuln == False:
+                player.hurt()
 
     #Stamina Regen
 
@@ -776,83 +928,90 @@ while True:  #Main
 
 
     if player.brokeBoys == True:
-        if player.brokePiece == 6:
+        if player.brokePiece == 11:
             player.playerHealth += 1
             player.brokePiece = 1
     if player.playerHealth == player.playerMaxHealth:
         player.brokeBoys = False
+
+    if player.playerHealth < player.playerMaxHealth - 2:
+        player.brokeDie = True
+        player.playerMaxHealth -= 1
+
+        
     #Gets newer player X and Y after the movement is finished
 
     playerX, playerY = player.getPlayerPos()
 
 
-    # Moves the ghost
+    # Moves the enemy
     
-    for i in range (ghostNum):
-        ghostStr = 'ghost' + str(i+1)
+    for i in range (enemyNum):
+        enemyStr = 'enemy' + str(i+1)
 
-        if eval(ghostStr).act == True:
+        if eval(enemyStr).act == True:
 
-            eval(ghostStr).move()
+            eval(enemyStr).move()
         else:
-            eval(ghostStr).active()
+            eval(enemyStr).active()
 
 
-    # Updates the ghost's hitbox
-    for i in range (ghostNum):
-        ghostStr = 'ghost' + str(i+1)
+    # Updates the enemy's hitbox
+    for i in range (enemyNum):
+        enemyStr = 'enemy' + str(i+1)
 
-        if eval(ghostStr).dead == False:
+        if eval(enemyStr).dead == False:
 
-            eval(ghostStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
+            eval(enemyStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
 
 
-            #Checking if player is touching a ghost
-            if pygame.Rect.colliderect(player.hitbox, eval(ghostStr).hitbox) == True and player.playerInvuln == False:
+            #Checking if player is touching a enemy
+            if pygame.Rect.colliderect(player.hitbox, eval(enemyStr).hitbox) == True and player.playerInvuln == False:
                 player.hurt()
                 
 
 
-            #Checking if ghost is hitting a sword hitbox
+            #Checking if enemy is hitting a sword hitbox
 
-            if eval(ghostStr).invul == False:
-                if pygame.Rect.colliderect(player.attackBoxU, eval(ghostStr).hitbox) == True:
-                    eval(ghostStr).hurtf()
+            if eval(enemyStr).invul == False:
+                if pygame.Rect.colliderect(player.attackBoxU, eval(enemyStr).hitbox) == True:
+                    eval(enemyStr).hurtf()
                     player.hit()
                     if player.playerStam > player.playerMaxStam:
                         staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxD, eval(ghostStr).hitbox) == True:
-                    eval(ghostStr).hurtf()
+                if pygame.Rect.colliderect(player.attackBoxD, eval(enemyStr).hitbox) == True:
+                    eval(enemyStr).hurtf()
                     player.hit()
                     if player.playerStam > player.playerMaxStam:
                         staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxL, eval(ghostStr).hitbox) == True:
-                    eval(ghostStr).hurtf()
+                if pygame.Rect.colliderect(player.attackBoxL, eval(enemyStr).hitbox) == True:
+                    eval(enemyStr).hurtf()
                     player.hit()
                     if player.playerStam > player.playerMaxStam:
                         staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxR, eval(ghostStr).hitbox) == True:
-                    eval(ghostStr).hurtf()
+                if pygame.Rect.colliderect(player.attackBoxR, eval(enemyStr).hitbox) == True:
+                    eval(enemyStr).hurtf()
                     player.hit()
                     if player.playerStam > player.playerMaxStam:
                         staminaCount = 0
 
-            #Kills the ghost if health is 0
-            if eval(ghostStr).health <= 0:
-                eval(ghostStr).kill()
+            #Kills the enemy if health is 0
+            if eval(enemyStr).health <= 0:
+                eval(enemyStr).kill()
 
-        if eval(ghostStr).hurt == True:
-            eval(ghostStr).hurtCount += 1
+                
+        if eval(enemyStr).hurt == True:
+            eval(enemyStr).hurtCount += 1
 
             
             
 
 
-    #Updating the spikes' positions on screen
-    for i in range (spikeNum):
-        spikeStr = 'spike' + str(i+1)
+    #Updating the tiles' positions on screen
+    for i in range (tileNum):
+        tileStr = 'tile' + str(i+1)
 
-        eval(spikeStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
+        eval(tileStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
 
 
     #If player is dead program closes
@@ -866,17 +1025,17 @@ while True:  #Main
 
 
 
-    #Drawing all the spikes
-    for i in range (spikeNum):
-        spikeStr = 'spike' + str(i+1)
-        eval(spikeStr).draw()
+    #Drawing all the tiles
+    for i in range (tileNum):
+        tileStr = 'tile' + str(i+1)
+        eval(tileStr).draw()
 
         
-    #Drawing all the ghosts    
-    for i in range (ghostNum):
-        ghostStr = 'ghost' + str(i+1)
-        if eval(ghostStr).dead == False:
-            eval(ghostStr).draw()
+    #Drawing all the enemys    
+    for i in range (enemyNum):
+        enemyStr = 'enemy' + str(i+1)
+        if eval(enemyStr).dead == False:
+            eval(enemyStr).draw()
 
 
     #Drawing the player in the middle of the screen
@@ -913,8 +1072,25 @@ while True:  #Main
                 SCREEN.blit(brokeHeart4,( 5 + 80*(i), 10))
             if player.brokePiece == 5:
                 SCREEN.blit(brokeHeart5,( 5 + 80*(i), 10))
+            if player.brokePiece == 6:
+                SCREEN.blit(brokeHeart6,( 5 + 80*(i), 10))
+            if player.brokePiece == 7:
+                SCREEN.blit(brokeHeart7,( 5 + 80*(i), 10))
+            if player.brokePiece == 8:
+                SCREEN.blit(brokeHeart8,( 5 + 80*(i), 10))
+            if player.brokePiece == 9:
+                SCREEN.blit(brokeHeart9,( 5 + 80*(i), 10))
+            if player.brokePiece == 10:
+                SCREEN.blit(brokeHeart10,( 5 + 80*(i), 10))
         else:
             SCREEN.blit(brokeHeart1,( 5 + 80*(i), 10))
+        if i == player.playerMaxHealth - 1 and player.brokeDie == True:
+            SCREEN.blit(brokeHeartDie,( 5 + 80*(i+1) - 20, -10))
+            player.brokeDieCount += 1
+            if player.brokeDieCount == 10:
+                player.brokeDie = False
+                player.brokeDieCount = 0
+            
 
 
     #Updating the screen
