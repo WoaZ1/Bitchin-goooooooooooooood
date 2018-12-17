@@ -79,6 +79,29 @@ brokeHeart8 = pygame.image.load('Sprites/BrokeHeart8.png')
 brokeHeart9 = pygame.image.load('Sprites/BrokeHeart9.png')
 brokeHeart10 = pygame.image.load('Sprites/BrokeHeart10.png')
 brokeHeartDie = pygame.image.load('Sprites/BrokeHeartDie.png')
+chonk1 = pygame.image.load('Sprites/chonk00.png')
+chonk2 = pygame.image.load('Sprites/chonk01.png')
+chonk3 = pygame.image.load('Sprites/chonk02.png')
+chonk4 = pygame.image.load('Sprites/chonk03.png')
+chonk5 = pygame.image.load('Sprites/chonk04.png')
+chonk6 = pygame.image.load('Sprites/chonk05.png')
+chonk7 = pygame.image.load('Sprites/chonk06.png')
+chonk8 = pygame.image.load('Sprites/chonk07.png')
+chonk9 = pygame.image.load('Sprites/chonk08.png')
+chonk10 = pygame.image.load('Sprites/chonk09.png')
+chonkL1 = pygame.image.load('Sprites/chonkL00.png')
+chonkL2 = pygame.image.load('Sprites/chonkL01.png')
+chonkL3 = pygame.image.load('Sprites/chonkL02.png')
+chonkL4 = pygame.image.load('Sprites/chonkL03.png')
+chonkL5 = pygame.image.load('Sprites/chonkL04.png')
+chonkL6 = pygame.image.load('Sprites/chonkL05.png')
+chonkL7 = pygame.image.load('Sprites/chonkL06.png')
+chonkL8 = pygame.image.load('Sprites/chonkL07.png')
+chonkL9 = pygame.image.load('Sprites/chonkL08.png')
+chonkL10 = pygame.image.load('Sprites/chonkL09.png')
+
+chonkLAnim = [chonkL1,chonkL2,chonkL3,chonkL4,chonkL5,chonkL6,chonkL7,chonkL8,chonkL9,chonkL10]
+chonkAnim = [chonk1,chonk2,chonk3,chonk4,chonk5,chonk6,chonk7,chonk8,chonk9,chonk10]
 swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
@@ -183,7 +206,7 @@ class enemy (object):
         self.hitbox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
         self.actBox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
 
-        pygame.draw.rect(SCREEN,(255,255,255),self.hitbox)
+
         self.xVelo = 0
         self.yVelo = 0
 
@@ -191,7 +214,6 @@ class enemy (object):
         #Checks to see if the player is in the range to activate the enemy    
     def active(self):
 
-        pygame.draw.rect(SCREEN,(255,255,255),self.actBox)
         if pygame.Rect.colliderect(player.hitbox, self.actBox) == True and self.act == False:
             self.act = True
             self.con = True
@@ -304,14 +326,14 @@ class charger (enemy):
         self.knockBack = True
 
         #Hitbox of the enemy
-        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 64,64)
 
         #If the player moves within this area, the enemy activates
         self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
 
 
-        self.L = ghostL
-        self.R = ghostR
+        self.L = chonkL1
+        self.R = chonk1
 
         self.canHurt = True
 
@@ -319,7 +341,7 @@ class charger (enemy):
 
         self.speed = 5
 
-        self.Img = ghostL
+        self.Img = chonkL1
 
         self.exhaustCount = 100
 
@@ -342,6 +364,7 @@ class charger (enemy):
             dy = player.playerY + HEIGHT/2 -16- self.Y
            
             angle = math.atan2(dy, dx)
+
 
 
             
