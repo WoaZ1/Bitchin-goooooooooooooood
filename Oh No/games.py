@@ -89,6 +89,11 @@ chonk7 = pygame.image.load('Sprites/chonk06.png')
 chonk8 = pygame.image.load('Sprites/chonk07.png')
 chonk9 = pygame.image.load('Sprites/chonk08.png')
 chonk10 = pygame.image.load('Sprites/chonk09.png')
+chonk11 = pygame.image.load('Sprites/chonk10.png')
+chonk12 = pygame.image.load('Sprites/chonk11.png')
+chonk13 = pygame.image.load('Sprites/chonk12.png')
+chonk14 = pygame.image.load('Sprites/chonk13.png')
+chonk15 = pygame.image.load('Sprites/chonk14.png')
 chonkL1 = pygame.image.load('Sprites/chonkL00.png')
 chonkL2 = pygame.image.load('Sprites/chonkL01.png')
 chonkL3 = pygame.image.load('Sprites/chonkL02.png')
@@ -99,9 +104,15 @@ chonkL7 = pygame.image.load('Sprites/chonkL06.png')
 chonkL8 = pygame.image.load('Sprites/chonkL07.png')
 chonkL9 = pygame.image.load('Sprites/chonkL08.png')
 chonkL10 = pygame.image.load('Sprites/chonkL09.png')
+chonkL11 = pygame.image.load('Sprites/chonkL10.png')
+chonkL12 = pygame.image.load('Sprites/chonkL11.png')
+chonkL13 = pygame.image.load('Sprites/chonkL12.png')
+chonkL14 = pygame.image.load('Sprites/chonkL13.png')
+chonkL15 = pygame.image.load('Sprites/chonkL14.png')
 
-chonkLAnim = [chonkL1,chonkL2,chonkL3,chonkL4,chonkL5,chonkL6,chonkL7,chonkL8,chonkL9,chonkL10]
-chonkAnim = [chonk1,chonk2,chonk3,chonk4,chonk5,chonk6,chonk7,chonk8,chonk9,chonk10]
+chonkLAnim = [chonkL1,chonkL2,chonkL3,chonkL4,chonkL5,chonkL6,chonkL7,chonkL8,chonkL9,chonkL10,chonkL11,chonkL12,chonkL13,chonkL14,chonkL15]
+chonkAnim = [chonk1,chonk2,chonk3,chonk4,chonk5,chonk6,chonk7,chonk8,chonk9,chonk10,chonk11,chonk12,chonk13,chonk14,chonk15]
+
 swipeU = pygame.image.load('Sprites/AttackU.png')
 swipeL= pygame.image.load('Sprites/AttackL.png')
 swipeD= pygame.image.load('Sprites/AttackD.png')
@@ -353,7 +364,18 @@ class charger (enemy):
     def move(self):
 
 
-        
+
+        if player.playerX + WIDTH/2-16 - self.X < 0 and self.dashCount < 20 and self.exhaustCount != 0:
+            try:
+                self.L = chonkLAnim[self.dashCount]
+            except:
+                pass
+        if player.playerX + WIDTH/2-16 - self.X > 0 and self.dashCount < 20 and self.exhaustCount != 0:
+            try:
+                self.R = chonkAnim[self.dashCount]
+            except:
+                pass
+            
         self.oldX = self.X
         self.oldY = self.Y
         
@@ -365,7 +387,10 @@ class charger (enemy):
            
             angle = math.atan2(dy, dx)
 
-
+            if dx > 0:
+                self.L = chonkL1
+            if dx < 0:
+                self.R = chonk1
 
             
             self.xVelo = (self.speed*math.cos(angle))
@@ -373,6 +398,8 @@ class charger (enemy):
         else:
             self.con = False
             self.dashCount += 1
+
+                
             if self.dashCount == 20:
 
                 dx = player.playerX + WIDTH/2-16 - self.X
