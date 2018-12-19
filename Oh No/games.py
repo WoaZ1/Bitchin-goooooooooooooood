@@ -2,6 +2,7 @@ import pygame, sys, os, math
 
 from pygame.locals import *
 from fractions import Fraction
+import random
 
 
 #Self Explanitory
@@ -129,6 +130,7 @@ tileNum = 0
 
 
 enemyNum = 0
+fireNum = 0
 
 
 
@@ -241,7 +243,13 @@ class enemy (object):
             self.con = False
 
     def hurtMove(self):
+
         if self.hurt == True and self.knockBack == True:
+            try:
+                if self.exhaustCount >= 100:
+                    self.exhaustCount = 0
+            except:
+                pass
             if self.hurtCount == 1:
                 
                     
@@ -280,7 +288,7 @@ class enemy (object):
 # First Enemy Created, is a simple enemy that moves towards the player.
 # Will move faster if farther away            
 class ghost (enemy):
-    def __init__(self,x,y,act = False,hp = 2):
+    def __init__(self,x,y,act = False,hp = 3):
 
 
         enemy.__init__(self,x,y,act,hp)
@@ -300,8 +308,12 @@ class ghost (enemy):
 
         self.canHurt = True
 
+        self.speed = 10
 
 
+        self.oldX = self.X
+        self.oldY = self.Y
+        
         self.Img = ghostL
 
 
@@ -311,9 +323,25 @@ class ghost (enemy):
 
         #Moves enemy, uses velocities to make it easier to move the hitbox
     def move(self):
+        self.oldX = self.X
+        self.oldY = self.Y
         if self.con == True:
-            self.xVelo = (((player.playerX-self.X) + WIDTH/2) / 20)
-            self.yVelo = (((player.playerY-self.Y) + HEIGHT/2) / 20)
+
+
+            
+            dx = player.playerX + WIDTH/2 -16- self.X
+            dy = player.playerY + HEIGHT/2 -16- self.Y
+           
+            angle = math.atan2(dy, dx)
+
+            if dx > 0:
+                self.L = ghostL
+            if dx < 0:
+                self.R = ghostR
+
+            
+            self.xVelo = (self.speed*math.cos(angle))
+            self.yVelo = (self.speed*math.sin(angle))
             
         self.hurtMove()
 
@@ -328,7 +356,7 @@ class ghost (enemy):
 
 
 class charger (enemy):
-    def __init__(self,x,y,act = False,hp = 5):
+    def __init__(self,x,y,act = False,hp = 7):
 
 
         enemy.__init__(self,x,y,act,hp)
@@ -350,11 +378,11 @@ class charger (enemy):
 
         self.dashCount = 0
 
-        self.speed = 5
+        self.speed = 4
 
         self.Img = chonkL1
 
-        self.exhaustCount = 100
+        self.exhaustCount = 50
 
         self.chargeAngle = 0
         self.oldX = self.X
@@ -395,7 +423,7 @@ class charger (enemy):
             
             self.xVelo = (self.speed*math.cos(angle))
             self.yVelo = (self.speed*math.sin(angle))
-        else:
+        elif self.hurt == False:
             self.con = False
             self.dashCount += 1
 
@@ -406,20 +434,95 @@ class charger (enemy):
                 dy = player.playerY + HEIGHT/2-16 - self.Y
            
                 self.chargeAngle = math.atan2(dy, dx)
-            if self.dashCount > 20 and self.dashCount < 40:
-                self.xVelo = ((self.speed*6)*math.cos(self.chargeAngle))
-                self.yVelo = ((self.speed*6)*math.sin(self.chargeAngle))
+            if self.dashCount > 20 and self.dashCount < 35:
+                self.xVelo = ((self.speed*12)*math.cos(self.chargeAngle))
+                self.yVelo = ((self.speed*12)*math.sin(self.chargeAngle))
             if self.dashCount > 40:
                 self.dashCount = 0
                 self.con = True
                 self.exhaustCount = 0
+        else:
+            pass
                 
 
         self.hurtMove()
 
 
         self.X += self.xVelo
-        self.Y += self.yVelo    
+        self.Y += self.yVelo
+
+
+
+class mage(enemy):
+    def init(self,x,y,act = False,hp = 2):
+
+
+        enemy.__init__(self,x,y,act,hp)
+        #Is the enemy active? Default: False
+        self.act = act
+        self.knockBack = True
+
+        #Hitbox of the enemy
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+
+        #If the player moves within this area, the enemy activates
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
+
+        self.mode = 0
+
+        self.teleCount = 0
+        self.fireCount = 0
+
+        self.canHurt = True
+
+        self.L = ghostL
+        self.R = ghost
+
+
+    def move(self):
+        if self.mode == 0:
+            self.fireCount += 1
+
+            if self.fireCount == 45:
+                fire(self)
+                self.fireCount = 0
+                self.mode = 1
+        if self.mode == 1:
+            self.teleCount += 1
+            
+            if self.teleCount == 45:
+                
+                tele(self)
+                self.teleCount = 0
+                self.mode = 0
+        
+    def fire(self):
+        global fireNum
+        dx = player.playerX + WIDTH/2-16 - self.X
+        dy = player.playerY + HEIGHT/2-16 - self.Y
+           
+        self.angle = math.atan2(dy, dx)
+        for i in range (3):
+            fireNum += 1
+            var('fireball' + str(fireNum)) = fireball(self.X,self.Y, self.angle + i*10)
+        
+       
+
+    def tele(self):
+        pass
+    
+
+class fireball(object):
+    def __init__(self,x,y,angle,speed = 15):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.angle = angle
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+
+    def move(self):
+        self.xVelo = ((self.speed)*math.cos(self.angle))
+        self.yVelo = ((self.speed)*math.sin(self.angle))
 
 class tile (object):
     def __init__(self,x,y):
@@ -585,6 +688,8 @@ class Player(object):
         self.playerCon = False
         self.brokeBoys = True
         self.brokePiece = 1
+        if self.playerStam < 1:
+            self.playerStam = 1
         
     #Returns player Pos
     def getPlayerPos(self):
@@ -605,7 +710,8 @@ tile1 = spike(100,100)
 tile2 = spike(150,100)
 
 
-enemy1 = charger(1500,200)
+enemy1 = mage(1500,200)
+
 
 
 
@@ -782,7 +888,7 @@ while True:  #Main
 
 
         #Player loses invulnerability
-        if hurtCount >= 20:
+        if hurtCount >= 40:
             player.playerInvuln = False
             player.playerHurt = False
             hurtCount = 0
@@ -823,7 +929,7 @@ while True:  #Main
 
 
         #At the end of attack
-        if attackCount == 7:
+        if attackCount == 10:
 
             #Player regains control
             player.playerCon = True
@@ -845,7 +951,7 @@ while True:  #Main
             playerStill = playerStillCopy
         player.attackL()
         attackCount += 1
-        if attackCount == 7:
+        if attackCount == 10:
             player.playerCon = True
             attackCount = 0
             player.playerAttackL = False
@@ -863,7 +969,7 @@ while True:  #Main
             playerStill = playerStillCopy
         player.attackD()
         attackCount += 1
-        if attackCount == 7:
+        if attackCount == 10:
             player.playerCon = True
             attackCount = 0
             player.playerAttackD = False
@@ -882,7 +988,7 @@ while True:  #Main
             playerStill = playerStillCopy
         player.attackR()
         attackCount += 1
-        if attackCount == 7:
+        if attackCount == 10:
             player.playerCon = True
             attackCount = 0
             player.playerAttackR = False
@@ -1017,6 +1123,8 @@ while True:  #Main
 
             #Checking if player is touching a enemy
             if pygame.Rect.colliderect(player.hitbox, eval(enemyStr).hitbox) == True and player.playerInvuln == False:
+                eval(enemyStr).health += 1
+                eval(enemyStr).hurtf()
                 player.hurt()
                 
 
