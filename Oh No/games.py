@@ -1,3 +1,4 @@
+
 import pygame, sys, os, math
 
 from pygame.locals import *
@@ -32,6 +33,9 @@ def blit_alpha(target, source, location, opacity):
 def tileRound(x, base = 32):
     return int(base * round(float(x)/base))
 
+
+fireBallNames = ['fireball1', 'fireball2', 'fireball3', 'fireball4']
+fireballs = {}
 
 
 
@@ -454,7 +458,7 @@ class charger (enemy):
 
 
 class mage(enemy):
-    def init(self,x,y,act = False,hp = 2):
+    def __init__(self,x,y,act = False,hp = 2):
 
 
         enemy.__init__(self,x,y,act,hp)
@@ -476,25 +480,31 @@ class mage(enemy):
         self.canHurt = True
 
         self.L = ghostL
-        self.R = ghost
+        self.R = ghostR
+        self.oldX = self.X
+        self.oldY = self.Y
 
 
     def move(self):
-        if self.mode == 0:
-            self.fireCount += 1
 
-            if self.fireCount == 45:
-                fire(self)
-                self.fireCount = 0
-                self.mode = 1
-        if self.mode == 1:
-            self.teleCount += 1
-            
-            if self.teleCount == 45:
+        self.oldX = self.X
+        self.oldY = self.Y
+        if self.con == True:
+            if self.mode == 0:
+                self.fireCount += 1
+
+                if self.fireCount == 45:
+                    self.fire()
+                    self.fireCount = 0
+                    self.mode = 1
+            if self.mode == 1:
+                self.teleCount += 1
                 
-                tele(self)
-                self.teleCount = 0
-                self.mode = 0
+                if self.teleCount == 45:
+                    
+                    self.tele()
+                    self.teleCount = 0
+                    self.mode = 0
         
     def fire(self):
         global fireNum
@@ -504,7 +514,7 @@ class mage(enemy):
         self.angle = math.atan2(dy, dx)
         for i in range (3):
             fireNum += 1
-            var('fireball' + str(fireNum)) = fireball(self.X,self.Y, self.angle + i*10)
+            fireballs['fireball'+str(fireNum)] = fireball(self.X,self.Y,self.angle + float(i)/float(5))
         
        
 
@@ -514,15 +524,38 @@ class mage(enemy):
 
 class fireball(object):
     def __init__(self,x,y,angle,speed = 15):
-        self.x = x
-        self.y = y
+        self.Img = ghostL
+        self.X = x
+        self.Y = y
+        self.xVelo = 0
+        self.yVelo = 0
         self.speed = speed
         self.angle = angle
-        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+        self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 16,16)
 
     def move(self):
         self.xVelo = ((self.speed)*math.cos(self.angle))
         self.yVelo = ((self.speed)*math.sin(self.angle))
+
+        self.X += self.xVelo
+        self.Y += self.yVelo
+
+    def update(self,x,y):
+
+
+        self.hitbox.move_ip(x+self.X -self.oldX,y+self.Y - self.oldY)
+        self.actBox.move_ip(x+self.X - self.oldX,y+self.Y - self.oldY) 
+
+
+        self.hitbox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
+        self.actBox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
+
+
+        self.xVelo = 0
+        self.yVelo = 0
+        
+    def draw(self):
+        SCREEN.blit(self.Img,(self.X - player.playerX, self.Y - player.playerY))    
 
 class tile (object):
     def __init__(self,x,y):
@@ -1101,20 +1134,26 @@ while True:  #Main
 
 
     # Moves the enemy
-    
-    for i in range (enemyNum):
-        enemyStr = 'enemy' + str(i+1)
+    if fireNum < enemyNum:
+        for i in range (enemyNum):
+            enemyStr = 'enemy' + str(i+1)
+            fireStr = 'fireball' + str(i + 1)
 
-        if eval(enemyStr).act == True:
+            if eval(enemyStr).act == True:
 
-            eval(enemyStr).move()
-        else:
-            eval(enemyStr).active()
+                eval(enemyStr).move()
+            else:
+                eval(enemyStr).active()
+
+            try:
+                fireballs['fireball'+str(i+1)].move()
+            except:
+                pass
 
 
-    # Updates the enemy's hitbox
-    for i in range (enemyNum):
-        enemyStr = 'enemy' + str(i+1)
+
+
+        # Updates the enemy's hitbox
 
         if eval(enemyStr).dead == False:
 
@@ -1126,40 +1165,88 @@ while True:  #Main
                 eval(enemyStr).health += 1
                 eval(enemyStr).hurtf()
                 player.hurt()
+            try:
+                if pygame.Rect.colliderect(player.hitbox, fireballs['fireball'+str(i+1)].hitbox) == True and player.playerInvuln == False:
+                    player.hurt()
+            except:
+                pass
+    else:
+        for i in range (fireNum):
+            enemyStr = 'enemy' + str(i+1)
+            fireStr = 'fireball' + str(i + 1)
+            try:
+                if eval(enemyStr).act == True:
+
+                    eval(enemyStr).move()
+                else:
+                    eval(enemyStr).active()
+            except:
+                pass
+            fireballs['fireball'+str(i+1)].move()
+
+            try:
+                if eval(enemyStr).dead == False:
+
+                    eval(enemyStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
+
+
+                    #Checking if player is touching a enemy
+                    if pygame.Rect.colliderect(player.hitbox, eval(enemyStr).hitbox) == True and player.playerInvuln == False:
+                        eval(enemyStr).health += 1
+                        eval(enemyStr).hurtf()
+                        player.hurt()
+            except:
+                pass
+
+            if pygame.Rect.colliderect(player.hitbox, fireballs['fireball'+str(i+1)].hitbox) == True and player.playerInvuln == False:
+                player.hurt()
+                
+
+
+
+
+
                 
 
 
             #Checking if enemy is hitting a sword hitbox
-
-            if eval(enemyStr).invul == False:
-                if pygame.Rect.colliderect(player.attackBoxU, eval(enemyStr).hitbox) == True:
-                    eval(enemyStr).hurtf()
-                    player.hit()
-                    if player.playerStam > player.playerMaxStam:
-                        staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxD, eval(enemyStr).hitbox) == True:
-                    eval(enemyStr).hurtf()
-                    player.hit()
-                    if player.playerStam > player.playerMaxStam:
-                        staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxL, eval(enemyStr).hitbox) == True:
-                    eval(enemyStr).hurtf()
-                    player.hit()
-                    if player.playerStam > player.playerMaxStam:
-                        staminaCount = 0
-                if pygame.Rect.colliderect(player.attackBoxR, eval(enemyStr).hitbox) == True:
-                    eval(enemyStr).hurtf()
-                    player.hit()
-                    if player.playerStam > player.playerMaxStam:
-                        staminaCount = 0
+            try:
+                if eval(enemyStr).invul == False:
+                    if pygame.Rect.colliderect(player.attackBoxU, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxD, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxL, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxR, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+            except:
+                pass
 
             #Kills the enemy if health is 0
-            if eval(enemyStr).health <= 0:
-                eval(enemyStr).kill()
+            try:
+                if eval(enemyStr).health <= 0:
+                    eval(enemyStr).kill()
+            except:
+                pass
 
-                
-        if eval(enemyStr).hurt == True:
-            eval(enemyStr).hurtCount += 1
+        try:       
+            if eval(enemyStr).hurt == True:
+                eval(enemyStr).hurtCount += 1
+        except:
+            pass
 
             
             
@@ -1189,11 +1276,25 @@ while True:  #Main
         eval(tileStr).draw()
 
         
-    #Drawing all the enemys    
-    for i in range (enemyNum):
-        enemyStr = 'enemy' + str(i+1)
-        if eval(enemyStr).dead == False:
-            eval(enemyStr).draw()
+    #Drawing all the enemys
+    if enemyNum > fireNum:
+        for i in range (enemyNum):
+            enemyStr = 'enemy' + str(i+1)
+            if eval(enemyStr).dead == False:
+                eval(enemyStr).draw()
+            try:
+                fireballs['fireball'+str(i+1)].draw()
+            except:
+                pass
+    else:
+        for i in range (fireNum):
+            try:
+                enemyStr = 'enemy' + str(i+1)
+                if eval(enemyStr).dead == False:
+                    eval(enemyStr).draw()
+            except:
+                pass
+            fireballs['fireball'+str(i+1)].draw()
 
 
     #Drawing the player in the middle of the screen
