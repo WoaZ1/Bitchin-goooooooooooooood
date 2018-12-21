@@ -114,6 +114,8 @@ chonkL12 = pygame.image.load('Sprites/chonkL11.png')
 chonkL13 = pygame.image.load('Sprites/chonkL12.png')
 chonkL14 = pygame.image.load('Sprites/chonkL13.png')
 chonkL15 = pygame.image.load('Sprites/chonkL14.png')
+fireballImg = pygame.image.load('Sprites/fireball.png')
+
 
 chonkLAnim = [chonkL1,chonkL2,chonkL3,chonkL4,chonkL5,chonkL6,chonkL7,chonkL8,chonkL9,chonkL10,chonkL11,chonkL12,chonkL13,chonkL14,chonkL15]
 chonkAnim = [chonk1,chonk2,chonk3,chonk4,chonk5,chonk6,chonk7,chonk8,chonk9,chonk10,chonk11,chonk12,chonk13,chonk14,chonk15]
@@ -344,12 +346,12 @@ class ghost (enemy):
                 self.R = ghostR
 
             
-            self.xVelo = (self.speed*math.cos(angle))
-            self.yVelo = (self.speed*math.sin(angle))
+
             
         self.hurtMove()
 
-
+        self.xVelo = (self.speed*math.cos(angle))
+        self.yVelo = (self.speed*math.sin(angle))
         
 
 
@@ -458,7 +460,7 @@ class charger (enemy):
 
 
 class mage(enemy):
-    def __init__(self,x,y,act = False,hp = 2):
+    def __init__(self,x,y,act = False,hp = 300):
 
 
         enemy.__init__(self,x,y,act,hp)
@@ -505,6 +507,13 @@ class mage(enemy):
                     self.tele()
                     self.teleCount = 0
                     self.mode = 0
+
+        
+
+        self.hurtMove()
+
+        self.X += self.xVelo
+        self.Y += self.yVelo
         
     def fire(self):
         global fireNum
@@ -514,26 +523,35 @@ class mage(enemy):
         self.angle = math.atan2(dy, dx)
         for i in range (3):
             fireNum += 1
-            fireballs['fireball'+str(fireNum)] = fireball(self.X,self.Y,self.angle + float(i)/float(5))
+            fireballs['fireball'+str(fireNum)] = fireball(self.X,self.Y,self.angle + float(i)/float(5)- 0.2)
         
        
 
     def tele(self):
         pass
+
+    def inWall(self):
+        pass
     
 
 class fireball(object):
     def __init__(self,x,y,angle,speed = 15):
-        self.Img = ghostL
+        self.Img = fireballImg
         self.X = x
         self.Y = y
         self.xVelo = 0
         self.yVelo = 0
+        self.oldX = self.X
+        self.oldY = self.Y
         self.speed = speed
         self.angle = angle
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 16,16)
 
     def move(self):
+
+        self.oldX = self.X
+        self.oldY = self.Y
+        
         self.xVelo = ((self.speed)*math.cos(self.angle))
         self.yVelo = ((self.speed)*math.sin(self.angle))
 
@@ -544,11 +562,9 @@ class fireball(object):
 
 
         self.hitbox.move_ip(x+self.X -self.oldX,y+self.Y - self.oldY)
-        self.actBox.move_ip(x+self.X - self.oldX,y+self.Y - self.oldY) 
 
 
         self.hitbox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
-        self.actBox.move_ip(self.X - player.playerX -self.hitbox.left,self.Y - player.playerY -self.hitbox.top)
 
 
         self.xVelo = 0
@@ -1153,19 +1169,20 @@ while True:  #Main
 
 
 
-        # Updates the enemy's hitbox
+            # Updates the enemy's hitbox
 
-        if eval(enemyStr).dead == False:
+            if eval(enemyStr).dead == False:
 
-            eval(enemyStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
+                eval(enemyStr).update(oldPlayerX-playerX,oldPlayerY-playerY)
 
 
-            #Checking if player is touching a enemy
-            if pygame.Rect.colliderect(player.hitbox, eval(enemyStr).hitbox) == True and player.playerInvuln == False:
-                eval(enemyStr).health += 1
-                eval(enemyStr).hurtf()
-                player.hurt()
+                #Checking if player is touching a enemy
+                if pygame.Rect.colliderect(player.hitbox, eval(enemyStr).hitbox) == True and player.playerInvuln == False:
+                    eval(enemyStr).health += 1
+                    eval(enemyStr).hurtf()
+                    player.hurt()
             try:
+                fireballs['fireball'+str(i+1)].update(oldPlayerX-playerX,oldPlayerY-playerY)
                 if pygame.Rect.colliderect(player.hitbox, fireballs['fireball'+str(i+1)].hitbox) == True and player.playerInvuln == False:
                     player.hurt()
             except:
@@ -1198,6 +1215,7 @@ while True:  #Main
             except:
                 pass
 
+            fireballs['fireball'+str(i+1)].update(oldPlayerX-playerX,oldPlayerY-playerY)
             if pygame.Rect.colliderect(player.hitbox, fireballs['fireball'+str(i+1)].hitbox) == True and player.playerInvuln == False:
                 player.hurt()
                 
