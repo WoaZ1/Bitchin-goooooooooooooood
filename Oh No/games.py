@@ -33,6 +33,9 @@ def blit_alpha(target, source, location, opacity):
 def tileRound(x, base = 32):
     return int(base * round(float(x)/base))
 
+def inWall(x,y,w,h):
+    return False
+
 
 fireBallNames = ['fireball1', 'fireball2', 'fireball3', 'fireball4']
 fireballs = {}
@@ -160,7 +163,7 @@ walkCount = 0
 #Used to keep track of all the enemies
 class enemy (object):
     def __init__(self,x,y,act,hp):
-        
+        self.id = "pant"
         global enemyNum
         enemyNum += 1
         
@@ -209,6 +212,8 @@ class enemy (object):
 
         #Moves the hitbox and the activation box
     def update(self,x,y):
+        if self.health == 0:
+            self.dead = True
 
         if player.playerX +WIDTH/2 > self.X:
             self.Img = self.R
@@ -256,8 +261,9 @@ class enemy (object):
                     self.exhaustCount = 0
             except:
                 pass
+            self.hurtCount += 1
             if self.hurtCount == 1:
-                
+                self.hurtf()
                     
                 self.hurtVeloX, self.hurtVeloY = player.playerX+WIDTH/2 - eval(enemyStr).X, player.playerY+HEIGHT/2 - eval(enemyStr).Y
 
@@ -271,6 +277,7 @@ class enemy (object):
                 elif abs(self.hurtVeloY) > abs(self.hurtVeloX):
                     self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloX)*10
                     self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloX)*10
+
 #                if eval(enemyStr).X < 0:
 #                    self.hurtVeloX = self.hurtVeloX*-1
 #                if eval(enemyStr).Y < 0:
@@ -285,6 +292,8 @@ class enemy (object):
                 self.hurtVeloY = -20
             self.xVelo = -1*self.hurtVeloX 
             self.yVelo = -1*self.hurtVeloY
+
+      
             if self.hurtCount > 5:
                 self.hurt = False
                 self.hurtCount = 0
@@ -302,6 +311,8 @@ class ghost (enemy):
         self.act = act
         self.knockBack = True
 
+        self.id = 'ghost'
+
         #Hitbox of the enemy
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
 
@@ -311,10 +322,10 @@ class ghost (enemy):
 
         self.L = ghostL
         self.R = ghostR
-
+        
         self.canHurt = True
 
-        self.speed = 10
+        self.speed = 8
 
 
         self.oldX = self.X
@@ -345,17 +356,16 @@ class ghost (enemy):
             if dx < 0:
                 self.R = ghostR
 
-            
+            self.xVelo = (self.speed*math.cos(angle))
+            self.yVelo = (self.speed*math.sin(angle))
 
-            
-        self.hurtMove()
+        if self.hurt == True:   
+            self.hurtMove()
 
-        self.xVelo = (self.speed*math.cos(angle))
-        self.yVelo = (self.speed*math.sin(angle))
         
 
 
-
+        print self.xVelo, self.yVelo
         self.X += self.xVelo
         self.Y += self.yVelo
 
@@ -441,8 +451,8 @@ class charger (enemy):
            
                 self.chargeAngle = math.atan2(dy, dx)
             if self.dashCount > 20 and self.dashCount < 35:
-                self.xVelo = ((self.speed*12)*math.cos(self.chargeAngle))
-                self.yVelo = ((self.speed*12)*math.sin(self.chargeAngle))
+                self.xVelo = ((self.speed*10)*math.cos(self.chargeAngle))
+                self.yVelo = ((self.speed*10)*math.sin(self.chargeAngle))
             if self.dashCount > 40:
                 self.dashCount = 0
                 self.con = True
@@ -460,7 +470,7 @@ class charger (enemy):
 
 
 class mage(enemy):
-    def __init__(self,x,y,act = False,hp = 300):
+    def __init__(self,x,y,act = False,hp = 2):
 
 
         enemy.__init__(self,x,y,act,hp)
@@ -470,6 +480,8 @@ class mage(enemy):
 
         #Hitbox of the enemy
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 32,32)
+        self.w = 32
+        self.h = 32
 
         #If the player moves within this area, the enemy activates
         self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
@@ -488,32 +500,32 @@ class mage(enemy):
 
 
     def move(self):
+        if self.dead == False:
+            self.oldX = self.X
+            self.oldY = self.Y
+            if self.con == True:
+                if self.mode == 0:
+                    self.fireCount += 1
 
-        self.oldX = self.X
-        self.oldY = self.Y
-        if self.con == True:
-            if self.mode == 0:
-                self.fireCount += 1
-
-                if self.fireCount == 45:
-                    self.fire()
-                    self.fireCount = 0
-                    self.mode = 1
-            if self.mode == 1:
-                self.teleCount += 1
-                
-                if self.teleCount == 45:
+                    if self.fireCount == 45:
+                        self.fire()
+                        self.fireCount = 0
+                        self.mode = 1
+                if self.mode == 1:
+                    self.teleCount += 1
                     
-                    self.tele()
-                    self.teleCount = 0
-                    self.mode = 0
+                    if self.teleCount == 50:
+                        
+                        self.tele()
+                        self.teleCount = 0
+                        self.mode = 0
 
-        
+            
 
-        self.hurtMove()
+            self.hurtMove()
 
-        self.X += self.xVelo
-        self.Y += self.yVelo
+            self.X += self.xVelo
+            self.Y += self.yVelo
         
     def fire(self):
         global fireNum
@@ -528,10 +540,12 @@ class mage(enemy):
        
 
     def tele(self):
-        pass
-
-    def inWall(self):
-        pass
+        while True:
+            a, b = (random.randint(-600,600),random.randint(-400,400))
+            if inWall (a,b,self.w,self.h) == False:
+                self.X += a
+                self.Y += b
+                break
     
 
 class fireball(object):
@@ -759,7 +773,9 @@ tile1 = spike(100,100)
 tile2 = spike(150,100)
 
 
-enemy1 = mage(1500,200)
+#enemy1 = mage(1500,200)
+#enemy2 = charger(1500,200)
+enemy1 = ghost(1500,200)
 
 
 
