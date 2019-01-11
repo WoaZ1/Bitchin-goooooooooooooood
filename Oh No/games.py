@@ -155,7 +155,7 @@ attackCount = 0
 hurtCount = 0
 hitCount = 0
 
-
+attackhit = False
 # Used as an easy way to time the player's walk animation and movement
 walkCount = 0
 
@@ -245,59 +245,53 @@ class enemy (object):
         #If the enemy dies
     def kill(self):
         self.dead = True
+        self.hitbox.move_ip(10000,10000)
 
     #Damages enemy
     def hurtf(self):
+
         if self.canHurt == True:
             self.health -= 1
             self.hurt = True
             self.con = False
+            self.invul = True
 
     def hurtMove(self):
 
+
+        
         if self.hurt == True and self.knockBack == True:
+
             try:
                 if self.exhaustCount >= 100:
                     self.exhaustCount = 0
+                self.dashCount = 0
             except:
                 pass
             self.hurtCount += 1
             if self.hurtCount == 1:
-                self.hurtf()
-                    
-                self.hurtVeloX, self.hurtVeloY = player.playerX+WIDTH/2 - eval(enemyStr).X, player.playerY+HEIGHT/2 - eval(enemyStr).Y
 
-                if self.hurtVeloY == 0:
-                    self.hurtVeloY = 1
-                if self.hurtVeloX == 0:
-                    self.hurtVeloX = 1
-                if abs(self.hurtVeloX) > abs(self.hurtVeloY):
-                    self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloY)*10
-                    self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloY)*10
-                elif abs(self.hurtVeloY) > abs(self.hurtVeloX):
-                    self.hurtVeloY = self.hurtVeloY/abs(self.hurtVeloX)*10
-                    self.hurtVeloX = self.hurtVeloX/abs(self.hurtVeloX)*10
 
-#                if eval(enemyStr).X < 0:
-#                    self.hurtVeloX = self.hurtVeloX*-1
-#                if eval(enemyStr).Y < 0:
-#                    self.hurtVeloY = self.hurtVeloY*-1
-            if self.hurtVeloX > 20:
-                self.hurtVeloX = 20
-            if self.hurtVeloX < -20:
-                self.hurtVeloX = -20
-            if self.hurtVeloY > 20:
-                self.hurtVeloY = 20
-            if self.hurtVeloY < -20:
-                self.hurtVeloY = -20
-            self.xVelo = -1*self.hurtVeloX 
-            self.yVelo = -1*self.hurtVeloY
+                if self.angle < 0:
 
-      
+
+                    self.hurtVeloX = ((10+self.speed)*math.cos(self.angle + math.pi))
+                    self.hurtVeloY = ((10+self.speed)*math.sin(self.angle + math.pi))
+                if self.angle > 0:
+
+
+                    self.hurtVeloX = ((10+self.speed)*math.cos(self.angle - math.pi))
+                    self.hurtVeloY = ((10+self.speed)*math.sin(self.angle - math.pi))
+
+            
+            self.xVelo = self.hurtVeloX
+            self.yVelo = self.hurtVeloY
+            
             if self.hurtCount > 5:
                 self.hurt = False
                 self.hurtCount = 0
                 self.con = True
+                self.invul = False
 
             
 # First Enemy Created, is a simple enemy that moves towards the player.
@@ -349,27 +343,27 @@ class ghost (enemy):
             dx = player.playerX + WIDTH/2 -16- self.X
             dy = player.playerY + HEIGHT/2 -16- self.Y
            
-            angle = math.atan2(dy, dx)
+            self.angle = math.atan2(dy, dx)
 
             if dx > 0:
                 self.L = ghostL
             if dx < 0:
                 self.R = ghostR
 
-            self.xVelo = (self.speed*math.cos(angle))
-            self.yVelo = (self.speed*math.sin(angle))
+            self.xVelo = (self.speed*math.cos(self.angle))
+            self.yVelo = (self.speed*math.sin(self.angle))
 
-        if self.hurt == True:   
+
+
+        if self.hurt == True:
             self.hurtMove()
 
         
 
-
-        print self.xVelo, self.yVelo
         self.X += self.xVelo
         self.Y += self.yVelo
 
-
+        
 
 class charger (enemy):
     def __init__(self,x,y,act = False,hp = 7):
@@ -409,6 +403,8 @@ class charger (enemy):
 
 
 
+
+        
         if player.playerX + WIDTH/2-16 - self.X < 0 and self.dashCount < 20 and self.exhaustCount != 0:
             try:
                 self.L = chonkLAnim[self.dashCount]
@@ -429,7 +425,7 @@ class charger (enemy):
             dx = player.playerX + WIDTH/2 -16- self.X
             dy = player.playerY + HEIGHT/2 -16- self.Y
            
-            angle = math.atan2(dy, dx)
+            self.angle = math.atan2(dy, dx)
 
             if dx > 0:
                 self.L = chonkL1
@@ -437,8 +433,8 @@ class charger (enemy):
                 self.R = chonk1
 
             
-            self.xVelo = (self.speed*math.cos(angle))
-            self.yVelo = (self.speed*math.sin(angle))
+            self.xVelo = (self.speed*math.cos(self.angle))
+            self.yVelo = (self.speed*math.sin(self.angle))
         elif self.hurt == False:
             self.con = False
             self.dashCount += 1
@@ -466,6 +462,8 @@ class charger (enemy):
 
         self.X += self.xVelo
         self.Y += self.yVelo
+
+
 
 
 
@@ -520,8 +518,6 @@ class mage(enemy):
                         self.teleCount = 0
                         self.mode = 0
 
-            
-
             self.hurtMove()
 
             self.X += self.xVelo
@@ -541,8 +537,12 @@ class mage(enemy):
 
     def tele(self):
         while True:
-            a, b = (random.randint(-600,600),random.randint(-400,400))
-            if inWall (a,b,self.w,self.h) == False:
+            a, b = (random.randint(-550,550),random.randint(-350,350))
+
+            
+
+                
+            if inWall (a,b,self.w,self.h) == False and self.X + a < player.playerX + WIDTH and  self.X +a > player.playerX and self.Y+b < player.playerY + HEIGHT and self.Y+b > player.playerY:
                 self.X += a
                 self.Y += b
                 break
@@ -759,6 +759,11 @@ class Player(object):
         return self.playerX, self.playerY
 
     def hit(self):
+        global attackCount
+        global attackhit
+        attackhit = True
+
+        attackCount = 9
         self.playerStam += 1
         if self.brokeBoys == True:
             self.brokePiece += 1
@@ -775,7 +780,7 @@ tile2 = spike(150,100)
 
 #enemy1 = mage(1500,200)
 #enemy2 = charger(1500,200)
-enemy1 = ghost(1500,200)
+enemy1 = mage(1500,200)
 
 
 
@@ -978,7 +983,8 @@ while True:  #Main
 
             #Puts the player in the swinging sprite
             playerStill = playerUpA
-
+        if attackhit == True:
+            player.attackBoxU.move_ip(swordMovement)
 
         #Right after the beginning of swing puts sword hitbox back offscreen
         if attackCount == 1:
@@ -996,6 +1002,8 @@ while True:  #Main
         #At the end of attack
         if attackCount == 10:
 
+
+
             #Player regains control
             player.playerCon = True
             attackCount = 0
@@ -1003,13 +1011,15 @@ while True:  #Main
 
             #Allows the player to walk right away after attacking
             walkCount = 0
-            
+               
     if player.playerAttackL == True:
         if attackCount ==0:
             swordMovement = (-(WIDTH/2+50000), -(HEIGHT/2+50000))
             player.attackBoxL.move_ip(WIDTH/2+50000,HEIGHT/2+50000)
             playerStillCopy = playerStill
             playerStill = playerLeftA
+        if attackhit == True:
+            player.attackBoxL.move_ip(swordMovement)
         if attackCount == 1:
             player.attackBoxL.move_ip(swordMovement)
         if attackCount == 3:
@@ -1017,6 +1027,7 @@ while True:  #Main
         player.attackL()
         attackCount += 1
         if attackCount == 10:
+            
             player.playerCon = True
             attackCount = 0
             player.playerAttackL = False
@@ -1028,6 +1039,8 @@ while True:  #Main
             player.attackBoxD.move_ip(WIDTH/2 -10+50000,HEIGHT/2 +50 +50000)
             playerStillCopy = playerStill
             playerStill = playerDownA
+        if attackhit == True:
+            player.attackBoxD.move_ip(swordMovement)
         if attackCount == 1:
             player.attackBoxD.move_ip(swordMovement)
         if attackCount == 3:
@@ -1035,6 +1048,7 @@ while True:  #Main
         player.attackD()
         attackCount += 1
         if attackCount == 10:
+            
             player.playerCon = True
             attackCount = 0
             player.playerAttackD = False
@@ -1047,6 +1061,8 @@ while True:  #Main
             player.attackBoxR.move_ip(WIDTH/2 + 16+50000,HEIGHT/2+50000)
             playerStillCopy = playerStill
             playerStill = playerRightA
+        if attackhit == True:
+            player.attackBoxR.move_ip(swordMovement)
         if attackCount == 1:
             player.attackBoxR.move_ip(swordMovement)
         if attackCount == 3:
@@ -1059,8 +1075,7 @@ while True:  #Main
             player.playerAttackR = False
             walkCount = 0
 
-
-
+    attackhit = False
 
 
 
@@ -1203,6 +1218,44 @@ while True:  #Main
                     player.hurt()
             except:
                 pass
+            
+
+            #Checking if enemy is hitting a sword hitbox
+            try:
+                if eval(enemyStr).invul == False:
+                    if pygame.Rect.colliderect(player.attackBoxU, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxD, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxL, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+                    if pygame.Rect.colliderect(player.attackBoxR, eval(enemyStr).hitbox) == True:
+                        eval(enemyStr).hurtf()
+                        player.hit()
+                        if player.playerStam > player.playerMaxStam:
+                            staminaCount = 0
+            except:
+                pass
+
+            #Kills the enemy if health is 0
+            try:
+                if eval(enemyStr).health <= 0:
+                    eval(enemyStr).kill()
+            except:
+                pass
+
+
+
+        
     else:
         for i in range (fireNum):
             enemyStr = 'enemy' + str(i+1)
@@ -1245,6 +1298,7 @@ while True:  #Main
 
             #Checking if enemy is hitting a sword hitbox
             try:
+
                 if eval(enemyStr).invul == False:
                     if pygame.Rect.colliderect(player.attackBoxU, eval(enemyStr).hitbox) == True:
                         eval(enemyStr).hurtf()
@@ -1276,11 +1330,6 @@ while True:  #Main
             except:
                 pass
 
-        try:       
-            if eval(enemyStr).hurt == True:
-                eval(enemyStr).hurtCount += 1
-        except:
-            pass
 
             
             
@@ -1314,12 +1363,14 @@ while True:  #Main
     if enemyNum > fireNum:
         for i in range (enemyNum):
             enemyStr = 'enemy' + str(i+1)
+
             if eval(enemyStr).dead == False:
                 eval(enemyStr).draw()
             try:
                 fireballs['fireball'+str(i+1)].draw()
             except:
                 pass
+
     else:
         for i in range (fireNum):
             try:
