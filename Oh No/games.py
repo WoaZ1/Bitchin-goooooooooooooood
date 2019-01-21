@@ -73,6 +73,7 @@ playerRight1 = pygame.image.load('Sprites/playerRight.png')
 playerRight2 = pygame.image.load('Sprites/playerRight2.png')
 playerRightA = pygame.image.load('Sprites/playerARight.png')
 spikeImg = pygame.image.load('Sprites/Spike.png')
+wallImg = pygame.image.load('Sprites/Wall.png')
 stamina = pygame.image.load('Sprites/Stam.png')
 noStamina = pygame.image.load('Sprites/NoStam.png')
 exStam = pygame.image.load('Sprites/ExStam.png')
@@ -317,7 +318,8 @@ class ghost (enemy):
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 20,32)
 
         #If the player moves within this area, the enemy activates
-        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,1000,600)
+        self.actBox.center = self.X-30, self.Y+ 50
 
 
         self.L = ghostL
@@ -342,6 +344,8 @@ class ghost (enemy):
     def move(self):
         self.oldX = self.X
         self.oldY = self.Y
+
+        
         if self.con == True:
 
 
@@ -384,9 +388,10 @@ class charger (enemy):
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 64,64)
 
         #If the player moves within this area, the enemy activates
-        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,1000,600)
+        self.actBox.center = self.X-30, self.Y+ 50
 
-
+        
         self.L = chonkL1
         self.R = chonk1
 
@@ -488,7 +493,8 @@ class mage(enemy):
         self.h = 32
 
         #If the player moves within this area, the enemy activates
-        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,800,800)
+        self.actBox = pygame.Rect(self.X-player.playerX - 400, self.Y-player.playerY - 400,1000,600)
+        self.actBox.center = self.X-30, self.Y+ 50
 
         self.mode = 0
 
@@ -638,8 +644,7 @@ class tile (object):
         self.Y = tileRound(y)
         self.hurts = False
 
-    def draw(self):
-        SCREEN.blit(self.img,(self.X - player.playerX, self.Y - 8 - player.playerY))
+
 
     def update(self,x,y):
 
@@ -654,12 +659,18 @@ class spike (tile):
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 64,64)
         self.img = spikeImg
         self.hurts = True
+        
+    def draw(self):
+        SCREEN.blit(self.img,(self.X - player.playerX, self.Y - 8 - player.playerY))
 
 class wall (tile):
     def __init__(self,x,y):
         tile.__init__(self,x,y)
         self.hitbox = pygame.Rect(self.X-player.playerX, self.Y-player.playerY, 64,64)
-        self.img = spikeImg
+        self.img = wallImg
+
+    def draw(self):
+        SCREEN.blit(self.img,(self.X - player.playerX, self.Y - player.playerY))
 
     def wallCheckPlayer(self):
         global oldPlayerX,oldPlayerY
@@ -675,8 +686,7 @@ class wall (tile):
                 else:
                     player.playerY = self.Y -(HEIGHT/2 + 10)
                   
-        
-        pygame.draw.rect(SCREEN, (255,255,255), self.hitbox)
+
 
 
 
@@ -862,9 +872,7 @@ tile2 = wall(150,100)
 
 
 enemy1 = mage(1500,200)
-enemy2 = mage(1550,200)
-enemy3 = mage(1600,200)
-enemy4 = mage(1650,200)
+
 
 
 
@@ -1600,6 +1608,10 @@ while True:  #Main
             if player.brokeDieCount == 10:
                 player.brokeDie = False
                 player.brokeDieCount = 0
+
+#    fpsTxt = int(fpsClock.get_fps())
+#    print fpsTxt
+
             
 
 
