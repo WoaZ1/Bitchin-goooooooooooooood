@@ -36,6 +36,29 @@ def tileRound(x, base = 32):
 def inWall(x,y,w,h):
     return False
 
+def sortWall(list1):
+
+    for idx in range (len(list1)-1):
+        
+        vari1 = list1[idx][1] #Stores the two list elements in variables (You really only need 1 but this makes it more simple.)
+        vari2 = list1[idx+1][1]
+        
+        if (vari2 > vari1) :
+            
+            
+            eval(list1[idx+1][0]).Y = vari1
+            list1[idx+1][1] = vari1
+            eval(list1[idx][0]).Y = vari2
+            list1[idx][1] = vari2
+    
+
+    return list1            
+
+       
+
+
+
+
 
 fireBallNames = ['fireball1', 'fireball2', 'fireball3', 'fireball4','fireball5', 'fireball6', 'fireball7', 'fireball8','fireball9', 'fireball10','fireball11', 'fireball12', 'fireball13', 'fireball14','fireball15', 'fireball16', 'fireball17', 'fireball18','fireball19', 'fireball20','fireball21', 'fireball22', 'fireball23', 'fireball24','fireball25', 'fireball26', 'fireball27', 'fireball28','fireball29', 'fireball30','fireball31', 'fireball32', 'fireball33', 'fireball34','fireball35', 'fireball36', 'fireball37', 'fireball38','fireball39', 'fireball40','fireball41', 'fireball42', 'fireball43', 'fireball44','fireball45', 'fireball46', 'fireball47', 'fireball48','fireball49', 'fireball50']
 fireballs = {}
@@ -140,7 +163,7 @@ playerStill = playerDown1
 
 # Num of objects
 tileNum = 0
-
+tileList = []
 
 
 enemyNum = 0
@@ -637,20 +660,21 @@ class fireball(object):
 class tile (object):
     def __init__(self,x,y):
         
-        global tileNum
+        global tileNum, tileList
         tileNum += 1
         
         self.X = tileRound(x)
         self.Y = tileRound(y)
         self.hurts = False
 
+        tempList = ['tile' + str(tileNum), self.Y]
+        tileList.append(tempList)
 
 
     def update(self,x,y):
 
         self.hitbox.topleft = (self.X - player.playerX, self.Y - player.playerY)
-        #self.hitbox.move_ip(x,y)
-        
+        #self.hitbox.move_ip(x,y)        
         
 #A spike tile, damages player
 class spike (tile):
@@ -673,18 +697,32 @@ class wall (tile):
         SCREEN.blit(self.img,(self.X - player.playerX, self.Y - player.playerY))
 
     def wallCheckPlayer(self):
-        global oldPlayerX,oldPlayerY
+        global oldPlayerX,oldPlayerY, tileNum, playerX, playerY, tileList
         if pygame.Rect.colliderect(player.hitbox, self.hitbox) == True:
             if abs(oldPlayerX+(WIDTH/2 )-(self.X+32)) > abs(oldPlayerY+(HEIGHT/2 )-(self.Y+32)):
                 if (self.X + 64) - (oldPlayerX + (WIDTH/2 - 16)) < 32:
-                    player.playerX = self.X+64 -(WIDTH/2 -16)
+                    player.playerX = self.X+64 -(WIDTH/2 -16) +6
+                    playerX = player.playerX
+
                 else:
-                    player.playerX = self.X -(WIDTH/2 + 10)
+                    player.playerX = self.X -(WIDTH/2 + 10)-12
+                    playerX = player.playerX
+
             else:
                 if (self.Y + 64) - (oldPlayerY + (HEIGHT/2 - 16)) < 32:
-                    player.playerY = self.Y+64 -(HEIGHT/2 -16)
+                    player.playerY = self.Y+64 -(HEIGHT/2 -16)+6
+                    playerY = player.playerY
+
                 else:
-                    player.playerY = self.Y -(HEIGHT/2 + 10)
+                    player.playerY = self.Y -(HEIGHT/2 + 10)-12
+                    playerY = player.playerY
+
+
+
+
+
+   
+
                   
 
 
@@ -869,6 +907,12 @@ player = Player()
     
 tile1 = wall(100,100)
 tile2 = wall(150,100)
+tile3 = wall(150,50)
+tile4 = wall(100,50)
+tile5 = wall(200,50)
+tile6 = wall(200,100)
+tile7 = wall(250,50)
+tile8 = wall(250,100)
 
 
 enemy1 = mage(1500,200)
@@ -1456,15 +1500,18 @@ while True:  #Main
                 if eval(enemyStr).health <= 0:
                     eval(enemyStr).kill()
             except:
-                pass
+                 pass
 
+    sortWall(tileList)
+    playerX,playerY = player.getPlayerPos()
 
-
+        
     #Moving wall if player moves
     for i in range (tileNum):
         tileStr = 'tile' + str(i+1)
-        eval(tileStr).update(oldPlayerX-playerX,oldPlayerY-playerY)    
-            
+        eval(tileStr).update(oldPlayerX-playerX,oldPlayerY-playerY)            
+ 
+     
 
 
     #Updating the tiles' positions on screen
@@ -1476,7 +1523,12 @@ while True:  #Main
         eval(tileStr).wallCheckPlayer()
 
 
-    playerX,playerY = player.getPlayerPos()
+
+
+
+        
+
+
     
 
 
